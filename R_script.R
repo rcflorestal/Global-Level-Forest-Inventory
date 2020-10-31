@@ -15,3 +15,14 @@ poa2 <- read.csv2('C:/Robson/home_office/Global-Level-Forest-Inventory/Data/fore
 
 # Show variables of forest inventory
 head(poa2)
+
+# Load Infrastructure Sheet
+infra <- read.csv2('C:/Robson/home_office/Global-Level-Forest-Inventory/Data/poa2_infra.csv',
+                   header = T)
+
+# Show variables of infrastructure
+head(infra)
+
+# Summary Statics
+summary(poa2)
+  
