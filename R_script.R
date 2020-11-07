@@ -47,14 +47,18 @@ nClasses <- (classeMax - classeMin)/classeAmp # Number of diameter classes
 # Looping to DBH
 d <- classeMin 
 
-
+  
 for (j in 1:nClasses) {
-  d = d + classeAmp   ## Upper Class Limit
-  li = d - classeAmp  ## Lower Class Limit
-  sup = d
-  class = (li + sup)/2
-  classe[which(poa2$DAP_cm >= li & poa2$DAP_cm < sup)] = paste(class, sep="")
-  classe2[which(poa2$DAP_cm >= li & poa2$DAP_cm < sup)] = paste(li, "-", sup, sep="")
+        d = d + classeAmp   ## Upper Class Limit
+        li = d - classeAmp  ## Lower Class Limit
+        sup = d
+        class = (li + sup)/2
+        classe[which(poa2$DAP_cm >= li & poa2$DAP_cm < sup)] = paste(class,
+                                                                     sep="")
+        classe2[which(poa2$DAP_cm >= li & poa2$DAP_cm < sup)] = paste(li, 
+                                                                      "-", 
+                                                                      sup, 
+                                                                      sep="")
 }
 
 # Define a limit maximums of class
@@ -88,10 +92,27 @@ poa2$classe2 <- ordered(poa2$classe2, levels=c("40-50", "50-60",  "60-70",
                                                "130-140", "140-150", ">150"))  
 
 # Plot Diameter Class Distribution for all tree species
-barplot(table(poa2$classe2), ylab='Nº de Arvores', xlab='Classes de DAP (cm)',
+barplot(table(poa2$classe2), 
+        ylab='Nº of Trees', 
+        xlab='Diameter at Breast Height Classes de DAP (DBH)',
         axis.lty=1)
 
 # Save the FI with diameter class
-write.csv2(poa2, 
-           file = 'C:/Robson/home_office/r_forest_inventory/IF_umf2_upa2_CLASS.csv', 
-           na='NA')
+write.csv2(
+        poa2, 
+        file = 'C:/Robson/home_office/Global-Level-Forest-Inventory/IF_umf2_upa2_CLASS.csv', 
+        na='NA')
+
+#--------------Join the FI with the list of endangered species-----------------#
+poa2_port <- poa2 %>%
+        full_join(port, by = 'Nome_Cientifico') %>% ## endangered species
+        full_join(infra, by = 'UT') %>%             ## infrastructure
+        select(-X.y)
+ 
+# Save FI only endangered species      
+write.csv2(
+        poa2, 
+        file = 'C:/Robson/home_office/Global-Level-Forest-Inventory/if_endangered.csv', 
+        na='NA')
+
+
