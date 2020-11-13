@@ -101,7 +101,8 @@ barplot(table(poa2$classe2),
 write.csv2(
         poa2, 
         file = 'C:/Robson/home_office/Global-Level-Forest-Inventory/IF_umf2_upa2_CLASS.csv', 
-        na='NA')
+        na='NA',
+        row.names = FALSE)
 
 #--------------Join the FI with the list of endangered species-----------------#
 poa2_port <- poa2 %>%
@@ -113,6 +114,7 @@ poa2_port <- poa2 %>%
 write.csv2(
         poa2, 
         file = 'C:/Robson/home_office/Global-Level-Forest-Inventory/if_endangered.csv', 
-        na='NA')
+        na='NA',
+        row.names = FALSE)
 
 
