@@ -5,8 +5,10 @@ library(stringr)
 library(ggplot2)
 
 #---------------------------Read data Sets-------------------------------------#
-# Read The List of Endangered Species, according to the Ordinance of the 
-# Brazilian Ministry of Environment (Portaria MMA 443/2014)
+# Read The List of Endangered Species, according to the Ordinance of the       #
+# Brazilian Ministry of Environment (Portaria MMA 443/2014)                    #
+#------------------------------------------------------------------------------#
+
 port <- read.csv2(
   'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/attachment_443.csv',
                   header = T, comment.char = "")
@@ -112,9 +114,23 @@ poa2_port <- poa2 %>%
  
 # Save FI only endangered species      
 write.csv2(
-        poa2, 
+        poa2_port, 
         file = 'C:/Robson/home_office/Global-Level-Forest-Inventory/if_endangered.csv', 
         na='NA',
         row.names = FALSE)
 
+#-----------------------Total Volume and Basal Area----------------------------#
+# Total average volume
+sapply(split(poa2_port$vol_m3, poa2_port$UT), mean)
 
+# Sum of total volume
+sapply(split(poa2_port$vol_m3, poa2_port$UT), sum)
+
+# Sum of total basal area
+sapply(split(poa2_port$G, poa2_port$UT), sum)
+
+#----------------------Cutting Volume and Basal Area---------------------------#
+cutVol <- poa2_port[which(poa2_port$Destinacao == "Abate"), ]
+sapply(split(cutVol$vol_m3, cutVol$UT), mean)
+sapply(split(cutVol$vol_m3, cutVol$UT), sum)
+sapply(split(cutVol$G, cutVol$UT), sum)
