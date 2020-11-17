@@ -111,7 +111,10 @@ FI_port <- FI %>%
         full_join(port, by = 'Nome_Cientifico') %>% ## endangered species
         full_join(infra, by = 'UT') %>%             ## infrastructure
         select(-X.y)
- 
+
+# NA values replaced by "Nao Protegida"
+FI_port$Status[which(is.na(FI_port$Status))] <- "Nao Protegida"
+
 # Save FI only endangered species      
 write.csv2(
         FI_port, 
@@ -121,6 +124,7 @@ write.csv2(
 
 #-----------------------Total Volume and Basal Area----------------------------#
 # Total average volume
+sapply(split(df_UTvol$vol_m3, df_UTvol$UT), mean)
 sapply(split(FI_port$vol_m3, FI_port$UT), mean)
 
 # Sum of total volume
