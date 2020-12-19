@@ -1,4 +1,5 @@
-Nome_Cientifico;Status;
+Coluna1;Coluna2;Coluna3
+Scientific_Name;Status;note
 Aphelandra espirito-santensis;Em Perigo;
 Aphelandra margaritae;Vulneravel;
 Aphelandra maximiliana;Em Perigo;
