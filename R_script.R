@@ -1,8 +1,13 @@
-# Required packages
+# Close all previously created figures
+graphics.off()
+
+# Load packages
 library(dplyr)
 library(tidyr)
 library(stringr)
 library(ggplot2)
+library(hrbrthemes)
+library(ggalt)
 
 #---------------------------Read data Sets-------------------------------------#
 # Read The List of Endangered Species, according to the Ordinance of the       #
@@ -11,92 +16,117 @@ library(ggplot2)
 
 port <- read.csv2(
   'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/attachment_443.csv',
-                  header = T, comment.char = "")
+                  header = TRUE,
+                  skip = 1)
 
 # Show Ordinance of the Brazilian Ministry of Environment 
-head(port)
+as_tibble(port)
 
 # Read the forest inventory sheet
 FI <- read.csv2(
-  'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/forest_inventory.csv', 
-                  header = T, sep = ',', as.is = T, comment.char = "")
+  'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/IFpoa2.csv', 
+                  header = TRUE)
 
 # Show variables of forest inventory
-head(FI)
+as_tibble(FI)
 
 # Read Infrastructure Sheet
 infra <- read.csv2(
-  'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/FI_infra.csv',
-                   header = T, comment.char = "")
+  'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/poa2_infra.csv',
+                   header = T)
 
 # Show variables of infrastructure
-head(infra)
+as_tibble(infra)
 
 #------------------------------Summary Statics---------------------------------#
 # Summary Statics
 summary(FI)
 
+#---------------------------Kernel density plot--------------------------------#
+#
+# Kernel density plot to view the distribution of DBH variable.
+#
+# Automatically defined window:
+plot(density(FI$DBH), # returns the density data
+             ylab = 'Density', 
+             main = 'Diameter at Breast Height - FLONA Caxiuanã UMF 2 UPA 2')
+
+# Manually defined Windows (2.5, 4, e 6)
+plot(density(FI$DBH,
+             bw = 2.5,
+             na.rm = TRUE),
+     ylab='Density', 
+     xlab = 'DBH (cm)',
+     main = ' Kernel Density Estimates of Diameter at Breast Height \n in FLONA Caxiuanã UMF 2 UPA 2', 
+     col='red')
+lines(density(FI$DBH, 
+              bw = 4),
+      col='green')
+lines(density(FI$DBH,
+              bw = 6), 
+      col='blue')
+legend('topright', 
+       legend=c('red: bw = 2.5',
+                'green: bw = 4',
+                'blue: bw = 6'))
+
+
+
 #-----------------Create Diameter at breast height Classes (DBH)---------------#
-classe <- vector()
-classe2 <- vector()
+class <- vector()
+class2 <- vector()
 
 # Define the limits of DBH
-classeMin <- 40  # Minimum diameter
-classeMax <- 300 # Maximum diameter
-classeAmp <- 10  # Range of diameter class
-nClasses <- (classeMax - classeMin)/classeAmp # Number of diameter classes
+classMin <- 40  # Minimum diameter
+classMax <- 300 # Maximum diameter
+classAmp <- 10  # Range of diameter class
+nClasses <- (classMax - classMin) / classAmp # Number of diameter classes
 
 # Looping to DBH
-d <- classeMin 
+d <- classMin 
 
-  
-for (j in 1:nClasses) {
-        d = d + classeAmp   ## Upper Class Limit
-        li = d - classeAmp  ## Lower Class Limit
+for(j in 1:nClasses){
+        d = d + classAmp   ## Upper Class Limit
+        li = d - classAmp  ## Lower Class Limit
         sup = d
-        class = (li + sup)/2
-        classe[which(FI$DAP_cm >= li & FI$DAP_cm < sup)] = paste(class,
-                                                                     sep="")
-        classe2[which(FI$DAP_cm >= li & FI$DAP_cm < sup)] = paste(li, 
-                                                                      "-", 
-                                                                      sup, 
-                                                                      sep="")
+        classL = (li + sup) / 2
+        class[which(FI$DBH >= li & FI$DBH < sup)] = paste(classL, sep="")
+        class2[which(FI$DBH >= li & FI$DBH < sup)] = paste(li, "-", sup, sep="")
 }
 
 # Define a limit maximums of class
-maxClasse <- 150
-classe2[which(as.numeric(classe) > maxClasse)] = paste(">", maxClasse, sep = "")
-classe[which(as.numeric(classe) > maxClasse)] = paste(">", maxClasse, sep = "")
+maxClass <- 150
+class2[which(as.numeric(class) > maxClass)] = paste(">", maxClass, sep = "")
+class[which(as.numeric(class) > maxClass)] = paste(">", maxClass, sep = "")
 
 # Remove the object j created on looping  
 rm(j)
 
 # Convert vectors to factors
-FI$classe = as.factor(classe)
-FI$classe2 = as.factor(classe2)
+FI$class = as.factor(class)
+FI$class2 = as.factor(class2)
 
-rm(d, li, sup, classe)
+rm(d, li, sup, class)
 
 # Display levels of class
-levels(FI$classe)
-levels(FI$classe2)
+levels(FI$class)
+levels(FI$class2)
 
 # Sort Class Levels
-# FI$classe <- ordered(FI_port$classe, levels=c("45", "55", "65", "75", 
-#                                                 "85", "95", "105", "115",  
-#                                                 "125",  "135",  "145",  "155",  
-#                                                 "165", "175",  "185",  "195", 
-#                                                 ">200"))
+# FI$class <- ordered(FI_port$class,
+                      # levels=c("45", "55", "65", "75", "85", "95", "105", "115", 
+                      #          "125",  "135",  "145",  "155", "165", "175", 
+                      #          "185",  "195", ">200"))
 
-FI$classe2 <- ordered(FI$classe2, levels=c("40-50", "50-60",  "60-70",  
-                                               "70-80", "80-90", "90-100", 
-                                               "100-110", "110-120", "120-130",
-                                               "130-140", "140-150", ">150"))  
+FI$class2 <- ordered(FI$class2, 
+                     levels = c("40-50", "50-60",  "60-70", "70-80", "80-90", 
+                                "90-100", "100-110", "110-120", "120-130",
+                                "130-140", "140-150", ">150"))  
 
 # Plot Diameter Class Distribution for all tree species
-barplot(table(FI$classe2), 
+barplot(table(FI$class2), 
         ylab='Nº of Trees', 
-        xlab='Diameter at Breast Height Classes de DAP (DBH)',
+        xlab='Diameter at Breast Height (DBH)',
         axis.lty=1)
 
 # Save the FI with diameter class
@@ -108,12 +138,13 @@ write.csv2(
 
 #--------------Join the FI with the list of endangered species-----------------#
 FI_port <- FI %>%
-        full_join(port, by = 'Nome_Cientifico') %>% ## endangered species
-        full_join(infra, by = 'UT') %>%             ## infrastructure
-        select(-X.y)
+        left_join(port, by = 'Scientific_Name') %>% ## endangered species
+        full_join(infra, by = 'UT')                 ## infrastructure
+        
 
 # NA values replaced by "Nao Protegida"
 FI_port$Status[which(is.na(FI_port$Status))] <- "Nao Protegida"
+as_tibble(FI_port)
 
 # Save FI only endangered species      
 write.csv2(
@@ -124,29 +155,56 @@ write.csv2(
 
 #-----------------------Total Volume and Basal Area----------------------------#
 # Total average volume
-sapply(split(df_UTvol$vol_m3, df_UTvol$UT), mean)
-sapply(split(FI_port$vol_m3, FI_port$UT), mean)
+sapply(split(FI_port$vol, FI_port$UT), mean)
 
 # Sum of total volume
-sapply(split(FI_port$vol_m3, FI_port$UT), sum)
+sapply(split(FI_port$vol, FI_port$UT), sum)
 
 # Sum of total basal area
 sapply(split(FI_port$G, FI_port$UT), sum)
 
 #----------------------Cutting Volume and Basal Area---------------------------#
-cutVol <- FI_port[which(FI_port$Destinacao == "Abate"), ]
-sapply(split(cutVol$vol_m3, cutVol$UT), mean)
-sapply(split(cutVol$vol_m3, cutVol$UT), sum)
+cutVol <- FI_port[which(FI_port$Destination == "Abate"), ]
+tapply(cutVol$vol, cutVol$UT, mean)
+sapply(split(cutVol$vol, cutVol$UT), sum)
 sapply(split(cutVol$G, cutVol$UT), sum)
 
 #----------------------------Basal Area by DBH---------------------------------#
-G_DBH <- aggregate.data.frame(FI_port$G, list(FI_port$classe2), sum) 
+G_DBH <- aggregate.data.frame(FI_port$G, list(FI_port$class2), sum) 
 names_G <- c("DBH", "Basal_Area")
 colnames(G_DBH) <- names_G
 G_DBH
 
 #---------------------Filter Trees Suitable for Cutting------------------------#
 FI_filter <- FI_port %>%
-        filter(DAP_cm >= 50 & QF <= 2)
-head(FI_filter)  
+        filter(DBH >= 50 & QF <= 2)
+as_tibble(FI_filter)  
 
+#-------------------------Plot Basal Area by DBH-------------------------------#
+FI_filter %>%
+        select(class2, G) %>%
+        filter(!is.na(class2)) %>%
+        group_by(class2) %>%
+        summarize(sum_G = sum(G)) %>%
+        ggplot(aes(x = class2, 
+                   y = sum_G,
+                   fill = sum_G)) +
+        geom_bar(stat = "identity",
+                 position = position_dodge(0.8)) +
+        theme(plot.title = element_text(color = "black",
+                                        size = 14,
+                                        face = "bold",
+                                        hjust = 0.5),
+              plot.subtitle = element_text(color = "black",
+                                           hjust = 0.5),
+              axis.title.x = element_text(color = "black",
+                                          size = 13),
+              axis.title.y = element_text(color = "black",
+                                          size = 13)) +
+        labs(title = "Basal Area per DBH",
+             subtitle = "UPA 2 UMF 2 FLONA Caxiuanã",
+             x = "Diamter at Breast Height (DBH - cm)",
+             y = "Basal Area (m²)",
+             caption = "Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.") +
+        theme(legend.position = c(0.9, 0.7))
+  
