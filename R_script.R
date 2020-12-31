@@ -29,7 +29,7 @@ library(DT)
 #------------------------------------------------------------------------------#
 #
 port <- read.csv2(
-  'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/attachment_443.csv',
+  'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/attachment_443.csv',
                   header = TRUE,
                   skip = 1)
 
@@ -38,7 +38,7 @@ as_tibble(port)
 
 # Read the forest inventory sheet
 FI <- read.csv2(
-  'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/IFpoa2.csv', 
+  'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/IFpoa2.csv', 
                   header = TRUE)
 
 # Show variables of forest inventory
@@ -46,7 +46,7 @@ as_tibble(FI)
 
 # Read Infrastructure Sheet
 infra <- read.csv2(
-  'C:/Robson/home_office/Global-Level-Forest-Inventory/Data/poa2_infra.csv',
+  'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/poa2_infra.csv',
                    header = T)
 
 # Show variables of infrastructure
@@ -66,11 +66,6 @@ summary(FI[c(1:3, 7:11)])
 #              main = 'Diameter at Breast Height - FLONA Caxiuanã UMF 2 UPA 2')
 
 # Manually defined Windows (2.5, 4, e 6)
-png("C:/Robson/home_office/Global-Level-Forest-Inventory/output/densityKernelDBH.png",
-    width = 640, 
-    height = 480,
-    units = "px")
-
 plot(density(FI$DBH,
              bw = 2.5,
              na.rm = TRUE),
@@ -88,6 +83,11 @@ legend('topright',
        legend=c('red: bw = 2.5',
                 'green: bw = 4',
                 'blue: bw = 6'))
+
+png("D:/Robson/home_office/Global-Level-Forest-Inventory/output/densityKernelDBH.png",
+    width = 640,
+    height = 480,
+    units = "px")
 
 dev.off()
 
@@ -143,25 +143,27 @@ FI$class2 <- ordered(FI$class2,
                                 "130-140", "140-150", ">150"))  
 
 # Plot Diameter Class Distribution for all tree species
-png("C:/Robson/home_office/Global-Level-Forest-Inventory/output/distributionDBH.png",
-    width = 640,
-    height = 480,
-    units = "px")
+par(las = 3,
+    mar = c(6.5, 5.6, 1.6, 1.6),
+    mgp = c(3.8, 0.6, 0))
 
 barplot(table(FI$class2), 
         ylab = 'Nº  of  Trees', 
         xlab = 'Class of Diameter at Breast Height (DBH) in cm.',
         axis.lty = 1,
-        axes = TRUE,
-        las = 3,
-        mgp = c(4,0.8,0))
+        axes = TRUE)
+
+png("D:/Robson/home_office/Global-Level-Forest-Inventory/output/distributionDBH.png",
+    width = 640,
+    height = 480,
+    units = "px")
 
 dev.off()
 
 # Save the FI with diameter class
 write.csv2(
         FI, 
-        file = 'C:/Robson/home_office/Global-Level-Forest-Inventory/output/IF_umf2_upa2_CLASS.csv', 
+        file = 'D:/Robson/home_office/Global-Level-Forest-Inventory/output/IF_umf2_upa2_CLASS.csv', 
         na='NA',
         row.names = FALSE)
 
@@ -182,7 +184,7 @@ as_tibble(FI_port)
 # Save FI only endangered species      
 write.csv2(
         FI_port, 
-        file = 'C:/Robson/home_office/Global-Level-Forest-Inventory/output/if_endangered.csv', 
+        file = 'D:/Robson/home_office/Global-Level-Forest-Inventory/output/if_endangered.csv', 
         na = 'NA',
         row.names = FALSE)
 
@@ -199,7 +201,7 @@ as_tibble(list_Species)
 
 ## Save the list of species
 write.csv2(list_Species,
-           "C:/Robson/home_office/Global-Level-Forest-Inventory/output/listSpecies.csv",
+           "D:/Robson/home_office/Global-Level-Forest-Inventory/output/listSpecies.csv",
            row.names = TRUE)
 #---------------------------List of species to be cut-------------------------##
 autex <- FI_port %>%
@@ -222,7 +224,7 @@ as_tibble(autex)
 
 ## Save the List of species to be cut
 write.csv2(autex,
-           "C:/Robson/home_office/Global-Level-Forest-Inventory/output/autex.csv",
+           "D:/Robson/home_office/Global-Level-Forest-Inventory/output/autex.csv",
            row.names = TRUE)
 
 #-----------------------Total Volume and Basal Area----------------------------#
@@ -256,11 +258,6 @@ FI_filter <- FI_port %>%
 as_tibble(FI_filter)  
 
 #-------------------------Plot Basal Area by DBH-------------------------------#
-png("C:/Robson/home_office/Global-Level-Forest-Inventory/output/basalAreaDBH.png",
-    width = 640, 
-    height = 480,
-    units = "px")
-
 FI_filter %>%
         select(class2, G) %>%
         filter(!is.na(class2)) %>%
@@ -288,7 +285,12 @@ FI_filter %>%
              caption = "Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.") +
         # scale_y_continuous(limits = 2000)) +
         theme(legend.position = c(0.9, 0.7))
-  
+
+png("D:/Robson/home_office/Global-Level-Forest-Inventory/output/basalAreaDBH.png",
+    width = 640, 
+    height = 480,
+    units = "px")  
+
 dev.off()
 
 #-------------------------Plot Destination by DBH------------------------------#
