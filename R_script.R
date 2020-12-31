@@ -14,6 +14,9 @@
 #'plots and tables.
 
 
+# Close all previously created figures
+graphics.off()
+
 # Load packages
 library(dplyr)
 library(tidyr)
