@@ -18,7 +18,7 @@ Global-level forest inventory analysis in the Caxiuanã National Forest, Amazon 
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/distributionDBH.png">
 </p>
 
-<P align="center" width="100%">
+<p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/basalAreaDBH.png">
 </p>
 
