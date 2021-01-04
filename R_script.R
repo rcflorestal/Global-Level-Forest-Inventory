@@ -87,13 +87,16 @@ lines(density(FI$DBH,
 lines(density(FI$DBH,
               bw = 6), 
       col='blue')
-legend('topright', 
+legend(x = 250, y = 0.03, 
        legend=c('BW:',
                 'red: 2.5',
                 'green: 4.0',
                 'blue: 6.0'))
 
-dev.copy(png, file = "densityKernelDBH.png")
+dev.copy(png, file = "densityKernelDBH.png",
+         width = 600, 
+         height = 480,
+         units = 'px')
 dev.off()
 
 #-----------------Create Diameter at breast height Classes (DBH)---------------#
@@ -402,17 +405,20 @@ ggplot(crit_10.15, aes(x = PercRem,
         panel.border = element_blank())
 
 ## Plot vol ~ UT and Status
-xyplot(vol ~ UT | Status, data = FI_port, main = "Volume as a function of plot",
+xyplot(vol ~ UT | Status, data = FI_port, main = "Volume as a function of plot and Ecological Status",
        xlab = "Plot")
 
 ## Factors
 FI_port$QF <- as.factor(FI_port$QF)
 
+## Density Plot by Stem Quality and DBH
 densityplot(~ DBH | QF, data = FI_port, main = "Density Plot by Stem Quality and DBH",
             xlab = "DBH (cm)")
 
+## Density Plot by Stem Quality and Height
 densityplot(~ H | QF, data = FI_port, main = "Density Plot by Stem Quality and Height",
             xlab = "Height (m)")
 
+## Density Plot by Stem Quality and Basal Area
 densityplot(~ G | QF, data = FI_port, main = "Density Plot by Stem Quality and Basal Area",
             xlab = "Basal Area (m2)")
