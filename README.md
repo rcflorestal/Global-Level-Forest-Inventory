@@ -21,6 +21,26 @@ Global-level forest inventory analysis in the Caxiuanã National Forest, Amazon 
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/distributionDBH.png">
 </p>
 
+<!--Volume as a function of plot-->
+<p align="center" width="100%">
+  <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/Volume-as-a-function-of-plot.png">
+</p>
+
+<!--Density plot by Stem Quality and DBH-->
+<p align="center" width="100%">
+  <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/QF_DBH.png">
+</p>
+
+<!--Density plot by Stem Quality and Height-->
+<p align="center" width="100%">
+  <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/QF_H.png">
+</p>
+
+<!--Density plot by Stem Quality and Basal Area-->
+<p align="center" width="100%">
+  <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/QF_G.png">
+</p>
+
 <!--Basal Area per Class of DBH-->
 <p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/basalAreaDBH.png">
@@ -30,7 +50,7 @@ Global-level forest inventory analysis in the Caxiuanã National Forest, Amazon 
 <p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/sel.png">
 </p>
-
+                                                                                                     
 <!--Criterion 10 to 15 percent-->
 <p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/Crit-10.15.png">
