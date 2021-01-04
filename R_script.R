@@ -25,6 +25,8 @@ library(ggplot2)
 library(hrbrthemes)
 library(ggalt)
 library(DT)
+library(jpeg)
+library(lattice)
 
 #---------------------------Read data Sets-------------------------------------#
 # Read The List of Endangered Species, according to the Ordinance of the       #
@@ -40,9 +42,9 @@ port <- read.csv2(
 as_tibble(port)
 
 # Read the forest inventory sheet
-FI <- read.csv2(
+FI <- read.table(
   'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/IFpoa2.csv', 
-                  header = TRUE)
+                  header = TRUE, dec = ",")
 
 # Show variables of forest inventory
 as_tibble(FI)
@@ -50,17 +52,20 @@ as_tibble(FI)
 # Read Infrastructure Sheet
 infra <- read.csv2(
   'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/poa2_infra.csv',
-                   header = T)
+                   header = TRUE)
 
 # Show variables of infrastructure
 as_tibble(infra)
 
-#------------------------------Summary Statics---------------------------------#
-# Summary Statics
-summary(FI[c(1:3, 7:11)])
+#------------------------------Exploratory Data--------------------------------#
+summary(FI[c(1:3, 7:11)])  ## Summary Statics
 
-#---------------------------Kernel density plot--------------------------------#
-#
+dhb <- transform(FI, UT = factor(UT))
+
+boxplot(DBH ~ UT, dhb, xlab = "Plot")
+
+boxplot(H ~ UT, dhb, xlab = "Plot")
+
 # Kernel density plot to view the distribution of DBH variable.
 #
 # Automatically defined window:
@@ -72,26 +77,23 @@ summary(FI[c(1:3, 7:11)])
 plot(density(FI$DBH,
              bw = 2.5,
              na.rm = TRUE),
-     ylab='Density', 
+     ylab = 'Density', 
      xlab = 'DBH (cm)',
      main = 'Kernel Density Estimates of Diameter at Breast Height \n in FLONA Caxiuanã UMF 2 UPA 2', 
-     col='red')
+     col = 'red')
 lines(density(FI$DBH, 
               bw = 4),
-      col='green')
+      col = 'green')
 lines(density(FI$DBH,
               bw = 6), 
       col='blue')
 legend('topright', 
-       legend=c('red: bw = 2.5',
-                'green: bw = 4',
-                'blue: bw = 6'))
+       legend=c('BW:',
+                'red: 2.5',
+                'green: 4.0',
+                'blue: 6.0'))
 
-png("D:/Robson/home_office/Global-Level-Forest-Inventory/output/densityKernelDBH.png",
-    width = 640,
-    height = 480,
-    units = "px")
-
+dev.copy(png, file = "densityKernelDBH.png")
 dev.off()
 
 #-----------------Create Diameter at breast height Classes (DBH)---------------#
@@ -156,12 +158,12 @@ barplot(table(FI$class2),
         axis.lty = 1,
         axes = TRUE)
 
-png("D:/Robson/home_office/Global-Level-Forest-Inventory/output/distributionDBH.png",
-    width = 640,
-    height = 480,
-    units = "px")
-
-dev.off()
+# png("D:/Robson/home_office/Global-Level-Forest-Inventory/output/distributionDBH.png",
+#     width = 640,
+#     height = 480,
+#     units = "px")
+# 
+# dev.off()
 
 # Save the FI with diameter class
 write.csv2(
@@ -195,8 +197,8 @@ write.csv2(
 list_Species <- FI_port %>%
             select(Name, Scientific_Name, Status, Destination) %>%
             group_by(Scientific_Name) %>%
-            mutate(Abate = sum(Destination == "Abate"),
-                   Remanescentes = sum(Destination == "Remanescente"),
+            mutate(Abate = sum(Destination == "Cut"),
+                   Remanescentes = sum(Destination == "Remaining"),
                    Total = Abate + Remanescentes) %>%
             distinct(Scientific_Name, .keep_all = TRUE)
 
@@ -210,11 +212,11 @@ write.csv2(list_Species,
 autex <- FI_port %>%
         select(Name, Scientific_Name, Status, Destination, vol) %>%
         group_by(Scientific_Name) %>%
-        mutate(count_cut = sum(Destination == "Abate"),
-               count_Rem = sum(Destination == "Remanescente"),
+        mutate(count_cut = sum(Destination == "Cut"),
+               count_Rem = sum(Destination == "Remaining"),
                count_total = count_cut + count_Rem,
                vol_total = sum(vol)) %>%
-        group_by(Scientific_Name, Destination == "Abate") %>%
+        group_by(Scientific_Name, Destination == "Cut") %>%
         filter(count_cut >= 1) %>%
         mutate(cut_vol = sum(vol)) %>%
         ungroup() %>%
@@ -231,18 +233,15 @@ write.csv2(autex,
            row.names = TRUE)
 
 #-----------------------Total Volume and Basal Area----------------------------#
-FI_port %>%
+FI_vol <- FI_port %>%
   group_by(UT) %>%
   summarize(vol_sum = sum(vol),
             vol_avg = mean(vol),
             G_sum = sum(G),
             G_avg = mean(G))
 
-
-
-
 #----------------------Cutting Volume and Basal Area---------------------------#
-cutVol <- FI_port[which(FI_port$Destination == "Abate"), ]
+cutVol <- FI_port[which(FI_port$Destination == "Cut"), ]
 tapply(cutVol$vol, cutVol$UT, mean)
 sapply(split(cutVol$vol, cutVol$UT), sum)
 sapply(split(cutVol$G, cutVol$UT), sum)
@@ -280,7 +279,8 @@ FI_filter %>%
               axis.title.x = element_text(color = "black",
                                           size = 13),
               axis.title.y = element_text(color = "black",
-                                          size = 13)) +
+                                          size = 13),
+              plot.caption = element_text(color = "blue", face = "italic")) +
         labs(title = "Basal Area per DBH",
              subtitle = "UPA 2 UMF 2 FLONA Caxiuanã",
              x = "Diamter at Breast Height (DBH - cm)",
@@ -289,21 +289,44 @@ FI_filter %>%
         # scale_y_continuous(limits = 2000)) +
         theme(legend.position = c(0.9, 0.7))
 
-png("D:/Robson/home_office/Global-Level-Forest-Inventory/output/basalAreaDBH.png",
-    width = 640, 
-    height = 480,
-    units = "px")  
+#-----------------------Plot Select cut trees per DBH-------------------------##
+dest <- FI_filter %>%
+  select(Scientific_Name, DBH, Destination, class2) %>%
+  filter(!is.na(class2)) %>%
+  group_by(class2, Destination) %>%
+  summarize(N = n())
 
-dev.off()
+total <- FI_filter %>%
+  count(class2, name = 'N') %>%
+  mutate(Destination = 'Total')
 
-#-------------------------Plot Destination by DBH------------------------------#
+sel <- bind_rows(dest, total)
 
+sel %>%
+        ggplot(aes(x = class2, y = N, fill = Destination)) +
+                geom_bar(stat = 'identity', position = 'dodge') +
+                theme(
+                  plot.title = element_text(color = "black", 
+                                            size = 14, 
+                                            face = "bold", 
+                                            hjust = 0.5),
+                  plot.subtitle = element_text(color = "black", hjust = 0.5),
+                  axis.title.x = element_text(color = "black", size = 14),
+                  axis.title.y = element_text(color = "black", size = 14),
+                  plot.caption = element_text(color = "blue", face = "italic")) +
+                labs(title = "Trees Selected for cutting in UPA 2 UMF 2 FLONA Caxiuanã", 
+                     x = 'DHB (cm)', 
+                     y = 'Number of Trees',
+                     caption = 'Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.') +
+                theme(legend.position = c(0.9,0.8))
+
+        
 #--------------------------Criterion 3 to 4 trees------------------------------#
 crit_3.4 <- FI_filter %>%
         select(UT, Scientific_Name, Destination, Status, AEM) %>%
         group_by(UT, Scientific_Name) %>%
-        mutate(Abate = sum(Destination == "Abate"), 
-               Remanescentes = sum(Destination == "Remanescente"),
+        mutate(Abate = sum(Destination == "Cut"), 
+               Remanescentes = sum(Destination == "Remaining"),
                Total = Abate + Remanescentes,
                Crit = if_else(Status == "Nao Protegida", 
                               ceiling(3*AEM/100), 
@@ -317,7 +340,7 @@ crit_3.4 <- FI_filter %>%
 as_tibble(crit_3.4)
 
 write.csv2(crit_3.4, 
-           "C:/Robson/home_office/Global-Level-Forest-Inventory/output/crit_3_4_trees.csv",
+           "D:/Robson/home_office/Global-Level-Forest-Inventory/output/crit_3_4_trees.csv",
            row.names = FALSE)
 
 datatable(head(crit_3.4), 
@@ -325,13 +348,13 @@ datatable(head(crit_3.4),
                                          autoWidth = TRUE),
           callback = JS('table.page("next").draw(false);'))
 
-
+  
 #--------------------------Criterion 10 to 15 percent--------------------------#
 crit_10.15 <- FI_filter %>%
         select(Scientific_Name, Destination, Status, AEM) %>%
         group_by(Scientific_Name) %>%
-        mutate(Abate = sum(Destination == "Abate"), 
-               Remanescentes = sum(Destination == "Remanescente"),
+        mutate(Abate = sum(Destination == "Cut"), 
+               Remanescentes = sum(Destination == "Remaining"),
                Total = Abate + Remanescentes,
                PercRem = round(Remanescentes / Total * 100),
                Crit = if_else(Status == "Nao Protegida", (10), (15)),
@@ -342,8 +365,54 @@ crit_10.15 <- FI_filter %>%
         select(-c(AEM,Destination)) %>%
         filter(Abate != 0)
 
+as_tibble(crit_10.15)
+
 write.csv2(crit_10.15, 
-           "C:/Robson/home_office/Global-Level-Forest-Inventory/output/crit_10_15_trees.csv",
+           "D:/Robson/home_office/Global-Level-Forest-Inventory/output/crit_10_15_trees.csv",
            row.names = FALSE)
 
+
+## Table 10 - 15 %
 datatable(head(crit_10.15), class = 'cell-border stripe')
+
+## Plot 10 - 15%
+ggplot(crit_10.15, aes(x = PercRem,
+                       xend = Crit, 
+                       y = Scientific_Name, 
+                       group = Scientific_Name)) + 
+  geom_dumbbell(color = "#a3c4dc", 
+                size = 0.85) + 
+  scale_x_continuous(breaks =  seq(0,100,5)) +
+  #xlim(10, 90) +
+  labs(x = 'Percentage of Remaining Trees', 
+       y = NULL, 
+       title = "PERCENTAGE OF REMAIING TREES IN UPA 2 UMF 2", 
+       subtitle = "POA 2020 - Haverst 2020-2021 - UMF 2 FLONA Caxiuanã", 
+       caption = "Source: Florest Inventory of POA 2020 Benevides Madeiras LTDA.") +
+  theme(plot.title = element_text(size = 13, hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(size = 11, hjust = 0.5),
+        plot.caption = element_text(color = "blue", face = "italic"),
+        plot.background = element_rect(fill = "#f7f7f7"), 
+        panel.background = element_rect(fill = "#D8D8D8"), #f7f7f7
+        panel.grid.minor = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(),
+        axis.ticks = element_blank(),
+        legend.position = "top",
+        panel.border = element_blank())
+
+## Plot vol ~ UT and Status
+xyplot(vol ~ UT | Status, data = FI_port, main = "Volume as a function of plot",
+       xlab = "Plot")
+
+## Factors
+FI_port$QF <- as.factor(FI_port$QF)
+
+densityplot(~ DBH | QF, data = FI_port, main = "Density Plot by Stem Quality and DBH",
+            xlab = "DBH (cm)")
+
+densityplot(~ H | QF, data = FI_port, main = "Density Plot by Stem Quality and Height",
+            xlab = "Height (m)")
+
+densityplot(~ G | QF, data = FI_port, main = "Density Plot by Stem Quality and Basal Area",
+            xlab = "Basal Area (m2)")
