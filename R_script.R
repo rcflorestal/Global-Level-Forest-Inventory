@@ -283,14 +283,41 @@ FI_filter %>%
                                           size = 13),
               axis.title.y = element_text(color = "black",
                                           size = 13),
-              plot.caption = element_text(color = "blue", face = "italic")) +
+              plot.caption = element_text(color = "blue", face = "italic"),
+              legend.position = c(0.9, 0.7)) +
         labs(title = "Basal Area per DBH",
              subtitle = "UPA 2 UMF 2 FLONA Caxiuanã",
              x = "Diamter at Breast Height (DBH - cm)",
              y = "Basal Area (m²)",
-             caption = "Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.") +
-        # scale_y_continuous(limits = 2000)) +
-        theme(legend.position = c(0.9, 0.7))
+             caption = "Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.",
+             fill = "Basal Area")
+        
+
+## Basal Area per plot
+FI_port %>%
+        select(UT, G) %>%
+        summarize(G_avg = sum(G)/14)  ## Get total mean basal area
+
+FI_port %>%
+        select(UT, G) %>%
+        group_by(UT) %>%
+        summarize(sum_G = sum(G)) %>%
+        ggplot(aes(x = as.factor(UT), y = sum_G, fill = sum_G > 597.2242)) +
+        geom_bar(position = "dodge",
+                 stat = "identity") +
+        scale_fill_manual(name = 'Basal Area:',
+                    values = c("#778899", "#4682B4"),
+                    labels = c('TRUE' = 'Above Average', 
+                               'FALSE' = 'Below Average')) +
+        theme(plot.title = element_text(color = "black",
+                                        size = 14,
+                                        face = "bold",
+                                        hjust = 0.5),
+              legend.position = "bottom") +
+        labs(title = "Basal Area per Plot",
+             y = "Basal Area (m²)",
+             x = "Plot")
+    
 
 #-----------------------Plot Select cut trees per DBH-------------------------##
 dest <- FI_filter %>%
