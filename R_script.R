@@ -62,6 +62,8 @@ summary(FI[c(1:3, 7:11)])  ## Summary Statics
 
 dhb <- transform(FI, UT = factor(UT))
 
+#png("densityKernelDBH.png")
+
 boxplot(DBH ~ UT, dhb, xlab = "Plot")
 
 boxplot(H ~ UT, dhb, xlab = "Plot")
@@ -93,11 +95,7 @@ legend(x = 250, y = 0.03,
                 'green: 4.0',
                 'blue: 6.0'))
 
-dev.copy(png, file = "densityKernelDBH.png",
-         width = 600, 
-         height = 480,
-         units = 'px')
-dev.off()
+#dev.off()
 
 #-----------------Create Diameter at breast height Classes (DBH)---------------#
 class <- vector()   ## Sets the class center vector
@@ -160,13 +158,6 @@ barplot(table(FI$class2),
         xlab = 'Class of Diameter at Breast Height (DBH) in cm.',
         axis.lty = 1,
         axes = TRUE)
-
-# png("D:/Robson/home_office/Global-Level-Forest-Inventory/output/distributionDBH.png",
-#     width = 640,
-#     height = 480,
-#     units = "px")
-# 
-# dev.off()
 
 # Save the FI with diameter class
 write.csv2(
@@ -355,13 +346,13 @@ sel %>%
 crit_3.4 <- FI_filter %>%
         select(UT, Scientific_Name, Destination, Status, AEM) %>%
         group_by(UT, Scientific_Name) %>%
-        mutate(Abate = sum(Destination == "Cut"), 
-               Remanescentes = sum(Destination == "Remaining"),
-               Total = Abate + Remanescentes,
+        mutate(Cut = sum(Destination == "Cut"), 
+               Remaining = sum(Destination == "Remaining"),
+               Total = Cut + Remaining,
                Crit = if_else(Status == "Nao Protegida", 
                               ceiling(3*AEM/100), 
                               ceiling(4*AEM/100)),
-               Analysis = if_else(Remanescentes >= Crit | Abate == 0,
+               Analysis = if_else(Remaining >= Crit | Cut == 0,
                                   "Atende", 
                                   "Nao Atende")) %>%
         distinct(AEM, .keep_all = TRUE) %>%
@@ -383,17 +374,17 @@ datatable(head(crit_3.4),
 crit_10.15 <- FI_filter %>%
         select(Scientific_Name, Destination, Status, AEM) %>%
         group_by(Scientific_Name) %>%
-        mutate(Abate = sum(Destination == "Cut"), 
-               Remanescentes = sum(Destination == "Remaining"),
-               Total = Abate + Remanescentes,
-               PercRem = round(Remanescentes / Total * 100),
+        mutate(Cut = sum(Destination == "Cut"), 
+               Remaining = sum(Destination == "Remaining"),
+               Total = Cut + Remaining,
+               PercRem = round(Remaining / Total * 100),
                Crit = if_else(Status == "Nao Protegida", (10), (15)),
-               Analysis = if_else(PercRem >= Crit | Abate == 0,
+               Analysis = if_else(PercRem >= Crit | Cut == 0,
                             "Atende", 
                             "Nao Atende")) %>%
         distinct(Scientific_Name, .keep_all = TRUE) %>%
         select(-c(AEM,Destination)) %>%
-        filter(Abate != 0)
+        filter(Cut != 0)
 
 as_tibble(crit_10.15)
 
@@ -449,3 +440,8 @@ densityplot(~ H | QF, data = FI_port, main = "Density Plot by Stem Quality and H
 ## Density Plot by Stem Quality and Basal Area
 densityplot(~ G | QF, data = FI_port, main = "Density Plot by Stem Quality and Basal Area",
             xlab = "Basal Area (m2)")
+
+
+# xyplot(G ~ QF | Status*Destination,
+#        data = FI_port, strip = TRUE, pch = 10)
+
