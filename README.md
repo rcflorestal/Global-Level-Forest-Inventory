@@ -60,14 +60,3 @@ Global-level forest inventory analysis in the Caxiuanã National Forest, Amazon 
 <p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/Crit-10.15.png">
 </p>
-
-<!--Table criterion 3 to 4 trees-->
-<p align="center" width="100%">
-  <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/tabCrit1.png">
-</p>
-
-<!--Table criterion 10 to 15 percent-->
-<P align="center" width="100%">
-  <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/tabCrit2.png">
-</p>
-
