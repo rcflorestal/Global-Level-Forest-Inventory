@@ -27,6 +27,7 @@ library(ggalt)
 library(DT)
 library(jpeg)
 library(lattice)
+library(plotly)
 
 #---------------------------Read data Sets-------------------------------------#
 # Read The List of Endangered Species, according to the Ordinance of the       #
@@ -423,25 +424,51 @@ ggplot(crit_10.15, aes(x = PercRem,
         panel.border = element_blank())
 
 ## Plot vol ~ UT and Status
-xyplot(vol ~ UT | Status, data = FI_port, main = "Volume as a function of plot and Ecological Status",
+xyplot(vol ~ UT | Status, data = FI_port, 
+       main = "Volume as a function of plot and Ecological Status",
        xlab = "Plot")
 
 ## Factors
 FI_port$QF <- as.factor(FI_port$QF)
 
 ## Density Plot by Stem Quality and DBH
-densityplot(~ DBH | QF, data = FI_port, main = "Density Plot by Stem Quality and DBH",
+densityplot(~ DBH | QF, data = FI_port, 
+            main = "Density Plot by Stem Quality and DBH",
             xlab = "DBH (cm)")
 
 ## Density Plot by Stem Quality and Height
-densityplot(~ H | QF, data = FI_port, main = "Density Plot by Stem Quality and Height",
+densityplot(~ H | QF, data = FI_port, 
+            main = "Density Plot by Stem Quality and Height",
             xlab = "Height (m)")
 
 ## Density Plot by Stem Quality and Basal Area
-densityplot(~ G | QF, data = FI_port, main = "Density Plot by Stem Quality and Basal Area",
+densityplot(~ G | QF, data = FI_port, 
+            main = "Density Plot by Stem Quality and Basal Area",
             xlab = "Basal Area (m2)")
 
 
 # xyplot(G ~ QF | Status*Destination,
 #        data = FI_port, strip = TRUE, pch = 10)
 
+## Map
+map <- FI_filter %>%
+        filter(UT == 1) %>%
+        mutate(Status = str_replace(Status, "^Em Perigo", "Endangered")) %>%
+        mutate(Status = str_replace(Status, "^Nao Protegida", "Not Endangered")) %>%
+        mutate(Status = str_replace(Status, "^Vulneravel", "Vulnerable ")) %>%
+        ggplot() +
+        geom_point(aes(x = East, y = North, 
+                       color = Destination,
+                       text = paste(
+                               'Scientific_Name:',Scientific_Name,'<br>',
+                                 'Volume(m3):', vol, '<br>',
+                               'Status:',Status))) +
+        theme(plot.title = element_text(hjust = 0.5),
+              plot.caption = element_text(face = "italic", size = 7)) +
+        labs(title = "Selection of Trees in plot 1.",
+             caption = "DATUM SIRGAS2000, MC-51, UTM Zone 22.") +
+        guides(y = guide_axis(angle = 90)) +
+        theme_bw()
+#map
+
+ggplotly(map)
