@@ -150,9 +150,11 @@ FI$class2 <- ordered(FI$class2,
                                 "130-140", "140-150", ">150"))  
 
 # Plot Diameter Class Distribution for all tree species
-par(las = 3,
-    mar = c(6.5, 5.6, 1.6, 1.6),
-    mgp = c(3.8, 0.6, 0))
+par(
+        las = 3,
+        mar = c(6.5, 5.6, 1.6, 1.6),
+        mgp = c(3.8, 0.6, 0)
+)
 
 barplot(table(FI$class2), 
         ylab = 'Nº  of  Trees', 
@@ -206,19 +208,15 @@ write.csv2(list_Species,
 #---------------------------List of species to be cut-------------------------##
 autex <- FI_port %>%
         select(Name, Scientific_Name, Status, Destination, vol) %>%
+        filter(Destination == "Cut") %>%
         group_by(Scientific_Name) %>%
         mutate(count_cut = sum(Destination == "Cut"),
-               count_Rem = sum(Destination == "Remaining"),
-               count_total = count_cut + count_Rem,
                vol_total = sum(vol)) %>%
-        group_by(Scientific_Name, Destination == "Cut") %>%
-        filter(count_cut >= 1) %>%
-        mutate(cut_vol = sum(vol)) %>%
-        ungroup() %>%
-        mutate(cut_rem = vol_total - cut_vol) %>%
+        group_by(Scientific_Name, Destination) %>%
         ungroup() %>%
         distinct(Scientific_Name, .keep_all = TRUE) %>%
-        select(-c(5,10))
+        arrange(Scientific_Name) %>%
+        select(-c(3:5))
 
 as_tibble(autex)
 
@@ -285,7 +283,7 @@ FI_filter %>%
              fill = "Basal Area")
         
 
-## Basal Area per plot
+## Graphic Basal Area per Plot
 FI_port %>%
         select(UT, G) %>%
         summarize(G_avg = sum(G)/14)  ## Get total mean basal area
@@ -310,7 +308,6 @@ FI_port %>%
              y = "Basal Area (m²)",
              x = "Plot")
     
-
 #-----------------------Plot Select cut trees per DBH-------------------------##
 dest <- FI_filter %>%
   select(Scientific_Name, DBH, Destination, class2) %>%
@@ -361,9 +358,11 @@ crit_3.4 <- FI_filter %>%
         
 as_tibble(crit_3.4)
 
-write.csv2(crit_3.4, 
-           "D:/Robson/home_office/Global-Level-Forest-Inventory/output/crit_3_4_trees.csv",
-           row.names = FALSE)
+write.csv2(
+        crit_3.4, 
+        "D:/Robson/home_office/Global-Level-Forest-Inventory/output/crit_3_4_trees.csv",
+        row.names = FALSE
+)
 
 datatable(head(crit_3.4), 
           filter = 'top', options = list(pageLength = 10, 
@@ -398,40 +397,46 @@ write.csv2(crit_10.15,
 datatable(head(crit_10.15), class = 'cell-border stripe')
 
 ## Plot 10 - 15%
-ggplot(crit_10.15, aes(x = PercRem,
-                       xend = Crit, 
-                       y = Scientific_Name, 
-                       group = Scientific_Name)) + 
-  geom_dumbbell(color = "#a3c4dc", 
-                size = 0.85) + 
-  scale_x_continuous(breaks =  seq(0,100,5)) +
-  #xlim(10, 90) +
-  labs(x = 'Percentage of Remaining Trees', 
-       y = NULL, 
-       title = "PERCENTAGE OF REMAIING TREES IN UPA 2 UMF 2", 
-       subtitle = "POA 2020 - Haverst 2020-2021 - UMF 2 FLONA Caxiuanã", 
-       caption = "Source: Florest Inventory of POA 2020 Benevides Madeiras LTDA.") +
-  theme(plot.title = element_text(size = 13, hjust = 0.5, face = "bold"),
-        plot.subtitle = element_text(size = 11, hjust = 0.5),
-        plot.caption = element_text(color = "blue", face = "italic"),
-        plot.background = element_rect(fill = "#f7f7f7"), 
-        panel.background = element_rect(fill = "#D8D8D8"), #f7f7f7
-        panel.grid.minor = element_blank(),
-        panel.grid.major.y = element_blank(),
-        panel.grid.major.x = element_line(),
-        axis.ticks = element_blank(),
-        legend.position = "top",
-        panel.border = element_blank())
+ggplot(
+        crit_10.15, aes(
+                x = PercRem,
+                xend = Crit,
+                y = Scientific_Name,
+                group = Scientific_Name)
+        ) +
+        geom_dumbbell(color = "#a3c4dc", size = 0.85) + 
+        scale_x_continuous(breaks =  seq(0,100,5)) +
+        labs(
+                x = 'Percentage of Remaining Trees', 
+                y = NULL, 
+                title = "PERCENTAGE OF REMAIING TREES IN UPA 2 UMF 2", 
+                subtitle = "POA 2020 - Haverst 2020-2021 - UMF 2 FLONA Caxiuanã", 
+                caption = "Source: Florest Inventory of POA 2020 Benevides Madeiras LTDA."
+                ) +
+        theme(
+                plot.title = element_text(
+                        size = 13, hjust = 0.5, face = "bold"),
+                plot.subtitle = element_text(size = 11, hjust = 0.5),
+                plot.caption = element_text(color = "blue", face = "italic"),
+                plot.background = element_rect(fill = "#f7f7f7"), 
+                panel.background = element_rect(fill = "#D8D8D8"), #f7f7f7
+                panel.grid.minor = element_blank(),
+                panel.grid.major.y = element_blank(),
+                panel.grid.major.x = element_line(),
+                axis.ticks = element_blank(),
+                legend.position = "top",
+                panel.border = element_blank()
+                )
 
 ## Plot vol ~ UT and Status
 xyplot(vol ~ UT | Status, data = FI_port, 
        main = "Volume as a function of plot and Ecological Status",
        xlab = "Plot")
 
-## Factors
-FI_port$QF <- as.factor(FI_port$QF)
 
 ## Density Plot by Stem Quality and DBH
+FI_port$QF <- as.factor(FI_port$QF)  ## Factors
+
 densityplot(~ DBH | QF, data = FI_port, 
             main = "Density Plot by Stem Quality and DBH",
             xlab = "DBH (cm)")
@@ -450,25 +455,28 @@ densityplot(~ G | QF, data = FI_port,
 # xyplot(G ~ QF | Status*Destination,
 #        data = FI_port, strip = TRUE, pch = 10)
 
-## Map
+## Map of plot
 map <- FI_filter %>%
         filter(UT == 1) %>%
         mutate(Status = str_replace(Status, "^Em Perigo", "Endangered")) %>%
         mutate(Status = str_replace(Status, "^Nao Protegida", "Not Endangered")) %>%
         mutate(Status = str_replace(Status, "^Vulneravel", "Vulnerable ")) %>%
         ggplot() +
-        geom_point(aes(x = East, y = North, 
-                       color = Destination,
-                       text = paste(
-                               'Scientific_Name:',Scientific_Name,'<br>',
+        geom_point(
+                aes(x = East, y = North,
+                    color = Destination,
+                    text = paste('Scientific_Name:', Scientific_Name,'<br>',
                                  'Volume(m3):', vol, '<br>',
-                               'Status:',Status))) +
-        theme(plot.title = element_text(hjust = 0.5),
-              plot.caption = element_text(face = "italic", size = 7)) +
-        labs(title = "Selection of Trees in plot 1.",
-             caption = "DATUM SIRGAS2000, MC-51, UTM Zone 22.") +
+                                 'Status:',Status))
+                ) +
+        theme(
+                plot.title = element_text(hjust = 0.5),
+                plot.caption = element_text(face = "italic", size = 7)
+                ) +
+        labs(
+                title = "Selection of Trees in plot 1.",
+                caption = "DATUM SIRGAS2000, MC-51, UTM Zone 22.") +
         guides(y = guide_axis(angle = 90)) +
         theme_bw()
-#map
 
 ggplotly(map)
