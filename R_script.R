@@ -59,15 +59,74 @@ infra <- read.csv2(
 as_tibble(infra)
 
 #------------------------------Exploratory Data--------------------------------#
-summary(FI[c(1:3, 7:11)])  ## Summary Statics
+summary(FI[c(6:11)])  ## Summary Statics
 
-dhb <- transform(FI, UT = factor(UT))
 
-#png("densityKernelDBH.png")
+## Summary by UT (plot)
+FI_summ_ut <- FI %>%
+  group_by(UT) %>%
+  summarize(
+    N = n(), 
+    DBH_mean = mean(DBH), DBH_med = median(DBH), 
+    DBH_sd = sd(DBH),
+    g_mean = mean(G), g_med = median(G), g_sd = sd(G),
+    H_mean = mean(H), H_med = median(H), H_sd = sd(H),
+    Vol_mean = mean(vol), Vol_med = median(vol), Vol_sd = sd(vol)
+  ) %>%
+  mutate(UT = as.factor(UT))
 
-boxplot(DBH ~ UT, dhb, xlab = "Plot")
+head(FI_summ_ut, 14)
 
-boxplot(H ~ UT, dhb, xlab = "Plot")
+## Summary by specie
+FI_summ_sp <- FI %>%
+  group_by(Scientific_Name) %>%
+  summarize(
+    N = n(), 
+    DBH_mean = mean(DBH), DBH_med = median(DBH), 
+    DBH_sd = sd(DBH),
+    g_mean = mean(G), g_med = median(G), g_sd = sd(G),
+    H_mean = mean(H), H_med = median(H), H_sd = sd(H),
+    Vol_mean = mean(vol), Vol_med = median(vol), Vol_sd = sd(vol)
+  )
+
+head(FI_summ_sp, 14)
+
+## Box plot and violin plot
+FI %>%
+  ggplot(aes(x = as.factor(UT), y = DBH)) +
+  geom_violin(aes(color = as.factor(UT), alpha = 0.8)) +
+  scale_color_brewer(palette = 'Paired') +
+  scale_fill_brewer(palette = 'Paired') +
+  #stat_summary(fun = mean, geom = 'point', shape = 23, size = 2) +
+  geom_boxplot(width = 0.3, outlier.size = -1) +
+  scale_y_continuous(breaks = seq(40, 300, by = 30)) +
+  #geom_text(data = IF_upa3_dap, aes(label = avg)) +
+  labs(
+    title = 'Distribution of DBH by Plot', 
+    x = 'Plot', y = 'DBH (cm)'
+  ) +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(hjust = 0.5)
+  ) 
+
+FI %>%
+  ggplot(aes(x = as.factor(UT), y = H)) +
+  geom_violin(aes(color = as.factor(UT), alpha = 0.8)) +
+  scale_color_brewer(palette = 'Spectral') +
+  scale_fill_brewer(palette = 'Spectral') +
+  #stat_summary(fun = mean, geom = 'point', shape = 23, size = 2) +
+  geom_boxplot(width = 0.2, outlier.size = -1) +
+  #scale_y_continuous(breaks = seq(40, 350, by = 30)) +
+  #geom_text(data = IF_upa3_dap, aes(label = avg)) +
+  labs(
+    title = 'Distribution of Height by Plot', 
+    x = 'UT', y = 'Height (m)'
+  ) +
+  theme(
+    legend.position = 'none',
+    plot.title = element_text(hjust = 0.5)
+  )
 
 # Kernel density plot to view the distribution of DBH variable.
 #
