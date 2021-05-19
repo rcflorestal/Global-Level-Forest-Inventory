@@ -231,7 +231,8 @@ write.csv2(
 #--------------Join the FI with the list of endangered species-----------------#
 FI_port <- FI %>%
         left_join(port, by = 'Scientific_Name') %>% ## endangered species
-        left_join(infra, by = 'UT')                 ## infrastructure
+        left_join(infra, by = 'UT') %>%             ## infrastructure
+        left_join(species_use[-c(1, 3, 4, 5, 6, 7)], by = 'Scientific_Name')
         
 
 # NA values replaced by "Nao Protegida"
@@ -264,6 +265,11 @@ as_tibble(list_Species)
 write.csv2(list_Species,
            "D:/Robson/home_office/Global-Level-Forest-Inventory/output/listSpecies.csv",
            row.names = TRUE)
+
+###---------------------------Use of Species---------------------------------###
+species_use <- list_Species %>% 
+  mutate(Use = (ifelse(Abate == 0, 'No Commercial', 'Commercial')))
+
 #---------------------------List of species to be cut-------------------------##
 autex <- FI_port %>%
         select(Name, Scientific_Name, Status, Destination, vol) %>%
@@ -343,62 +349,118 @@ FI_filter %>%
         
 
 ## Graphic Basal Area per Plot
-FI_port %>%
+FI_g <- FI_port %>%
         select(UT, G) %>%
-        summarize(G_avg = sum(G)/14)  ## Get total mean basal area
+        summarize(G_avg = sum(G) / 14)  ## Get total mean basal area
 
 FI_port %>%
         select(UT, G) %>%
         group_by(UT) %>%
         summarize(sum_G = sum(G)) %>%
-        ggplot(aes(x = as.factor(UT), y = sum_G, fill = sum_G > 597.2242)) +
+        ggplot(aes(x = as.factor(UT), y = sum_G, fill = sum_G > FI_g$G_avg)) +
         geom_bar(position = "dodge",
                  stat = "identity") +
-        scale_fill_manual(name = 'Basal Area:',
-                    values = c("#778899", "#4682B4"),
-                    labels = c('TRUE' = 'Above Average', 
-                               'FALSE' = 'Below Average')) +
-        theme(plot.title = element_text(color = "black",
-                                        size = 14,
-                                        face = "bold",
-                                        hjust = 0.5),
-              legend.position = "bottom") +
-        labs(title = "Basal Area per Plot",
-             y = "Basal Area (m²)",
-             x = "Plot")
+        geom_hline(aes(yintercept = FI_g$G_avg, color = '628,94m²')) +
+        scale_fill_manual(
+          name = '', 
+          values = c("#778899", "#4682B4"),
+          labels = c('TRUE' = 'Above Average', 'FALSE' = 'Below Average')
+        ) +
+        theme(
+          plot.title = element_text(
+            color = "black", size = 14, face = "bold", hjust = 0.5
+          ), legend.position = "bottom"
+        ) +
+        labs(
+          title = "Basal Area per Plot", 
+          y = "Basal Area (m²)", 
+          x = "Plot", 
+          color = 'Average Basal Area'
+        )
     
 #-----------------------Plot Select cut trees per DBH-------------------------##
+### All Commercial Species per DBH ###
 dest <- FI_filter %>%
-  select(Scientific_Name, DBH, Destination, class2) %>%
-  filter(!is.na(class2)) %>%
-  group_by(class2, Destination) %>%
-  summarize(N = n())
+        filter(Use == 'Commercial') %>%
+        filter(!is.na(class2)) %>%
+        group_by(Scientific_Name, class2, Destination) %>%
+        summarize(N = n()) %>%
+        spread(key = Destination, value = N, fill = 0) %>%
+        mutate(Total = Cut + Remaining)
 
-total <- FI_filter %>%
-  count(class2, name = 'N') %>%
-  mutate(Destination = 'Total')
+## Plot the selection of cut by DBH classes
+specie_plot <- dest %>%
+        group_by(Scientific_Name, class2, Cut, Remaining, Total) %>%
+  			filter(Scientific_Name %in% rem$Scientific_Name) %>%
+  			pivot_longer(
+    		        cols = c(3:5),
+    						values_to = 'N'
+  			) %>%
+			  ggplot(aes(x = class2, y = N, group = name)) +
+			  geom_bar(stat = 'identity', position = 'dodge', aes(fill = name)) +
+			  facet_wrap(~Scientific_Name, scales = 'free_y') +
+			  theme(
+                plot.title = element_text(color = "black", 
+                              size = 13, 
+                              face = "bold", 
+                              hjust = 0.5),
+						    plot.subtitle = element_text(color = "black", hjust = 0.5),
+						    axis.text.x = element_text(angle = 90, size = 9),
+						    axis.title.x = element_text(color = "black", size = 9),
+						    axis.title.y = element_text(color = "black", size = 12),
+						    plot.caption = element_text(color = "blue", face = "italic"),
+						    strip.text = element_text(face = 'italic'),
+						    legend.title = element_blank(),
+						    legend.position = 'top'
+						  ) +
+						  labs(
+    					        title = "Trees Selected for cutting in UPA 2 UMF 2 FLONA Caxiuanã", 
+									    x = 'DHB (cm)', 
+									    y = 'Number of Trees',
+									    caption = 'Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.'   
+							)
 
-sel <- bind_rows(dest, total)
+specie_plot
 
-sel %>%
-        ggplot(aes(x = class2, y = N, fill = Destination)) +
-                geom_bar(stat = 'identity', position = 'dodge') +
-                theme(
-                  plot.title = element_text(color = "black", 
-                                            size = 14, 
-                                            face = "bold", 
-                                            hjust = 0.5),
-                  plot.subtitle = element_text(color = "black", hjust = 0.5),
-                  axis.title.x = element_text(color = "black", size = 14),
-                  axis.title.y = element_text(color = "black", size = 14),
-                  plot.caption = element_text(color = "blue", face = "italic")) +
-                labs(title = "Trees Selected for cutting in UPA 2 UMF 2 FLONA Caxiuanã", 
-                     x = 'DHB (cm)', 
-                     y = 'Number of Trees',
-                     caption = 'Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.') +
-                theme(legend.position = c(0.9,0.8))
+## Filter all species which are without remaining trees by DBH classes
+rem <- dest %>%
+        filter(Remaining == 0) %>%
+        select(Scientific_Name)
 
-        
+## Plot the selection of cut by DBH classes
+specieRM_plot <- dest %>%
+        group_by(Scientific_Name, class2, Cut, Remaining, Total) %>%
+        filter(Scientific_Name %in% rem$Scientific_Name) %>%
+        pivot_longer(
+                cols = c(3:5),
+                values_to = 'N'
+        ) %>%
+        ggplot(aes(x = class2, y = N, group = name)) +
+        geom_bar(stat = 'identity', position = 'dodge', aes(fill = name)) +
+        facet_wrap(~Scientific_Name, scales = 'free_y') +
+        theme(
+                plot.title = element_text(color = "black", 
+                                          size = 13, 
+                                          face = "bold", 
+                                          hjust = 0.5),
+                plot.subtitle = element_text(color = "black", hjust = 0.5),
+                axis.text.x = element_text(angle = 90, size = 9),
+                axis.title.x = element_text(color = "black", size = 9),
+                axis.title.y = element_text(color = "black", size = 12),
+                plot.caption = element_text(color = "blue", face = "italic"),
+                strip.text = element_text(face = 'italic'),
+                legend.title = element_blank(),
+                legend.position = 'top'
+          ) +
+          labs(
+            title = "Species Selected for cutting without Ramainingin Trees \nUPA 2 UMF 2 FLONA Caxiuanã", 
+            x = 'DHB (cm)', 
+            y = 'Number of Trees',
+            caption = 'Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.'   
+          )
+              
+specieRM_plot
+                  
 #--------------------------Criterion 3 to 4 trees------------------------------#
 crit_3.4 <- FI_filter %>%
         select(UT, Scientific_Name, Destination, Status, AEM) %>%
