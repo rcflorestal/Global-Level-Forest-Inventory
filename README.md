@@ -54,8 +54,13 @@ Global-level forest inventory analysis in the Caxiuanã National Forest, Amazon 
 <!--Selection per Class of DBH-->
 <p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/sel.png">
-</p>                             
-                   
+</p>          
+
+<!--Species Without Ramaining Trees-->
+<p align="center" width="100%">
+  <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/Species_rem.png">
+</p>
+  
 <!--Criterion 10 to 15 percent-->
 <p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/Crit-10.15.png">
