@@ -36,11 +36,6 @@ Global-level forest inventory analysis in the Caxiuanã National Forest, Amazon 
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/QF_H.png">
 </p>
 
-<!--Density plot by Stem Quality and Basal Area-->
-<p align="center" width="100%">
-  <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/QF_G.png">
-</p>
-
 <!--Basal Area per Class of DBH-->
 <p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/basalAreaDBH.png">
