@@ -93,7 +93,7 @@ FI_summ_sp <- FI %>%
 head(FI_summ_sp, 14)
 
 ## Box plot and violin plot
-FI %>%
+dbh_boxplot <- FI %>%  ## DBH Box plot
         ggplot(aes(x = as.factor(UT), y = DBH)) +
         geom_violin(aes(color = as.factor(UT), alpha = 0.8)) +
         scale_color_brewer(palette = 'Paired') +
@@ -111,7 +111,9 @@ FI %>%
         plot.title = element_text(hjust = 0.5)
         ) 
 
-FI %>%
+ggplotly(dbh_boxplot)
+
+height_boxplot <- FI %>%  ## Height Box plot
         ggplot(aes(x = as.factor(UT), y = H)) +
         geom_violin(aes(color = as.factor(UT), alpha = 0.8)) +
         scale_color_brewer(palette = 'Spectral') +
@@ -128,6 +130,8 @@ FI %>%
             legend.position = 'none',
             plot.title = element_text(hjust = 0.5)
         )
+
+ggplotly(height_boxplot)
 
 # Kernel density plot to view the distribution of DBH variable.
 #
@@ -269,17 +273,25 @@ FI$class2 <- ordered(FI$class2,
                                 "130-140", "140-150", ">150"))  
 
 # Plot Diameter Class Distribution for all tree species
-par(
-        las = 3,
-        mar = c(6.5, 5.6, 1.6, 1.6),
-        mgp = c(3.8, 0.6, 0)
-)
-
-barplot(table(FI$class2), 
-        ylab = 'Nº  of  Trees', 
-        xlab = 'Class of Diameter at Breast Height (DBH) in cm.',
-        axis.lty = 1,
-        axes = TRUE)
+FI %>% filter(DBH >= 50) %>%
+        group_by(class2, DBH) %>%
+        summarize(N = n()) %>%
+        ggplot(aes(x = class2)) +
+        geom_bar(
+                stat = 'identity', aes(y = N), fill = 'steelblue'
+        ) +
+        scale_y_continuous(
+                labels = scales::label_number(big.mark = '.')
+        ) +
+        theme(
+                axis.text.x = element_text(angle = 90),
+                plot.title = element_text(hjust = 0.5)
+        ) +
+        labs(
+                title = 'Nº  of  Trees',
+                x = 'Class of Diameter at Breast Height (DBH) in cm.',
+                y = 'Nº de Árvores'
+        )
 
 # Save the FI with diameter class
 write.csv2(
@@ -295,10 +307,18 @@ FI_port <- FI %>%
         
         
 # NA values replaced by "Nao Protegida"
-FI_port$Status[which(is.na(FI_port$Status))] <- "Nao Protegida"
+FI_port$Status[which(is.na(FI_port$Status))] <- "Not Protected"
 
 FI_port <- FI_port %>%
   select(-note)
+
+FI_port <- FI_port %>%
+        mutate(
+                Status = recode(
+                        Status, 'Vulneravel' = 'Vulnerable',
+                        'Em Perigo' = 'Endangered'
+                )
+        )
 
 as_tibble(FI_port)
 
@@ -448,6 +468,45 @@ FI_port %>%
     
 #-----------------------Plot Select cut trees per DBH-------------------------##
 ### All Commercial Species per DBH ###
+destAll <- FI_filter %>%
+        filter(Use == 'Commercial') %>%
+        select(Scientific_Name, DBH, Destination, class2) %>%
+        filter(!is.na(class2)) %>%
+        group_by(class2, Destination) %>%
+        summarize(N = n())
+
+total <- FI_filter %>%
+        filter(Use == 'Commercial') %>%
+        count(class2, name = 'N') %>%
+        mutate(Destination = 'Total')
+
+sel <- bind_rows(destAll, total)
+#sel <- transform(sel, Destination = reorder(Destination, -N))
+
+sel %>% 
+        ggplot(aes(x = class2, y = N, group = Destination, color = Destination)) +
+        # geom_bar(stat = 'identity', position = 'dodge', aes(fill = Destination)) +
+        #geom_line() +
+        geom_smooth(se = F, method = NULL, span = 2) +
+        # geom_smooth(se = F, method = 'gam') +
+        theme(
+                plot.title = element_text(color = "black", 
+                                          size = 14, 
+                                          face = "bold", 
+                                          hjust = 0.5),
+                axis.text.x = element_text(angle = 50),
+                axis.title.x = element_text(size = 13),
+                axis.title.y = element_text(size = 13)
+        ) +
+        labs(
+                title = "Trees Select for Cutting in UPA 2 UMF 2 FLONA Caxiuanã", 
+                x = 'DAP (cm)', 
+                y = 'Nº de Árvores'
+        ) +
+        theme(legend.position = c(0.9, 0.7))
+sel
+
+## species that are without remaining trees by DBH classes
 dest <- FI_filter %>%
         filter(Use == 'Commercial') %>%
         filter(!is.na(class2)) %>%
@@ -455,7 +514,7 @@ dest <- FI_filter %>%
         summarize(N = n()) %>%
         spread(key = Destination, value = N, fill = 0) %>%
         mutate(Total = Cut + Remaining)
-## Filter all species which are without remaining trees by DBH classes
+## Filter all species that are without remaining trees by DBH classes
 rem <- dest %>%
         filter(Remaining == 0) %>%
         select(Scientific_Name)
@@ -481,7 +540,7 @@ specie_plot <- dest %>%
 	        legend.position = 'top'
 	) + 
         labs(
-                title = "Trees Selected for cutting in UPA 2 UMF 2 FLONA Caxiuanã", 
+                title = "Species Without Remaining Trees in UPA 2 UMF 2 FLONA Caxiuanã", 
                 x = 'DHB (cm)', y = 'Number of Trees', 
                 caption = 'Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.'
         )
@@ -577,31 +636,72 @@ ggplot(
                 )
 
 ## Plot vol ~ UT and Status
-xyplot(vol ~ UT | Status, data = FI_port, 
-       main = "Volume as a function of plot and Ecological Status",
-       xlab = "Plot")
-
+FI_port %>% 
+        select(UT, vol, Status) %>%
+        group_by(UT, vol) %>%
+        ggplot() +
+        geom_jitter(aes(x = UT, y = vol, color = vol)) +
+        facet_grid(cols = vars(Status)) +
+        theme(
+                plot.title = element_text(hjust = 0.5),
+                strip.text = element_text(face = 'italic'),
+                legend.position = 'bottom'
+        ) +
+        labs(
+                title = 'Volume as a function of plot and Ecological Status',
+                x = 'Plot',
+                y = 'Volume (m³)'
+        ) 
 
 ## Density Plot by Stem Quality and DBH
-FI_port$QF <- as.factor(FI_port$QF)  ## Factors
-
-densityplot(~ DBH | QF, data = FI_port, 
-            main = "Density Plot by Stem Quality and DBH",
-            xlab = "DBH (cm)")
+FI_port %>% 
+        select(QF, class2) %>%
+        mutate(
+                QF = recode(
+                        QF, '1' = 'Stem Quality 1', 
+                        '2' = 'Stem Quality 2', 
+                        '3' = 'Stem Quality 3'
+                )
+        ) %>%
+        #group_by(QF, DBH) %>%
+        ggplot(aes(x = class2, color = QF)) +
+        geom_density() +
+        facet_grid(cols = vars(QF)) +
+        theme(
+                plot.title = element_text(hjust = 0.5),
+                axis.text.x = element_text(angle = 90),
+                strip.text = element_text(face = 'italic'),
+                legend.position = 'none'
+        ) +
+        labs(
+                title = 'Density Plot by Stem Quality and DBH',
+                x = 'Plot',
+                y = 'DBH (cm)'
+        ) 
 
 ## Density Plot by Stem Quality and Height
-densityplot(~ H | QF, data = FI_port, 
-            main = "Density Plot by Stem Quality and Height",
-            xlab = "Height (m)")
-
-## Density Plot by Stem Quality and Basal Area
-densityplot(~ G | QF, data = FI_port, 
-            main = "Density Plot by Stem Quality and Basal Area",
-            xlab = "Basal Area (m2)")
-
-
-# xyplot(G ~ QF | Status*Destination,
-#        data = FI_port, strip = TRUE, pch = 10)
+FI_port %>% 
+        select(QF, H) %>%
+        mutate(
+                QF = recode(
+                        QF, '1' = 'Stem Quality 1', 
+                        '2' = 'Stem Quality 2', 
+                        '3' = 'Stem Quality 3'
+                )
+        ) %>%
+        ggplot(aes(x = H, color = QF)) +
+        geom_density() +
+        facet_grid(cols = vars(QF)) +
+        theme(
+                plot.title = element_text(hjust = 0.5),
+                strip.text = element_text(face = 'italic'),
+                legend.position = 'none'
+        ) +
+        labs(
+                title = 'Density Plot by Stem Quality and Height',
+                x = 'Plot',
+                y = 'Height (m)'
+        ) 
 
 ## Map of plot
 map <- FI_filter %>%
@@ -620,7 +720,8 @@ map <- FI_filter %>%
                 ) +
         theme(
                 plot.title = element_text(hjust = 0.5),
-                plot.caption = element_text(face = "italic", size = 7)
+                plot.caption = element_text(face = "italic", size = 7),
+                axis.title.y = element_text(angle = 90)
                 ) +
         labs(
                 title = "Selection of Trees in plot 1.",
