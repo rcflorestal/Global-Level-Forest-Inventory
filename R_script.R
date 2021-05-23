@@ -613,7 +613,8 @@ map <- FI_filter %>%
         geom_point(
                 aes(x = East, y = North,
                     color = Destination,
-                    text = paste('Scientific_Name:', Scientific_Name,'<br>',
+                    text = paste('Scientific_Name:', '<i>', Scientific_Name, 
+                                 '</i>','<br>',
                                  'Volume(m3):', vol, '<br>',
                                  'Status:',Status))
                 ) +
