@@ -28,6 +28,7 @@ library(DT)
 library(jpeg)
 library(lattice)
 library(plotly)
+library(sjmisc)
 
 #---------------------------Read data Sets-------------------------------------#
 # Read The List of Endangered Species, according to the Ordinance of the       #
@@ -35,17 +36,18 @@ library(plotly)
 #------------------------------------------------------------------------------#
 #
 port <- read.csv2(
-  'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/attachment_443.csv',
-                  header = TRUE,
-                  skip = 1)
+        'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/attachment_443.csv', 
+        header = TRUE, skip = 1
+)
 
 # Show Ordinance of the Brazilian Ministry of Environment 
 as_tibble(port)
 
 # Read the forest inventory sheet
 FI <- read.table(
-  'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/IFpoa2.csv', 
-                  header = TRUE, dec = ",")
+        'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/IFpoa2.csv', 
+        header = TRUE, dec = ","
+)
 
 # Show variables of forest inventory
 as_tibble(FI)
@@ -64,69 +66,68 @@ summary(FI[c(6:11)])  ## Summary Statics
 
 ## Summary by UT (plot)
 FI_summ_ut <- FI %>%
-  group_by(UT) %>%
-  summarize(
-    N = n(), 
-    DBH_mean = mean(DBH), DBH_med = median(DBH), 
-    DBH_sd = sd(DBH),
-    g_mean = mean(G), g_med = median(G), g_sd = sd(G),
-    H_mean = mean(H), H_med = median(H), H_sd = sd(H),
-    Vol_mean = mean(vol), Vol_med = median(vol), Vol_sd = sd(vol)
-  ) %>%
-  mutate(UT = as.factor(UT))
+        group_by(UT) %>%
+        summarize(
+                N = n(), DBH_mean = mean(DBH), DBH_med = median(DBH), 
+                DBH_sd = sd(DBH), g_mean = mean(G), g_med = median(G), 
+                g_sd = sd(G), H_mean = mean(H), H_med = median(H), 
+                H_sd = sd(H), Vol_mean = mean(vol), Vol_med = median(vol), 
+                Vol_sd = sd(vol)
+        ) %>%
+        mutate(UT = as.factor(UT))
 
 head(FI_summ_ut, 14)
 
 ## Summary by specie
 FI_summ_sp <- FI %>%
-  group_by(Scientific_Name) %>%
-  summarize(
-    N = n(), 
-    DBH_mean = mean(DBH), DBH_med = median(DBH), 
-    DBH_sd = sd(DBH),
-    g_mean = mean(G), g_med = median(G), g_sd = sd(G),
-    H_mean = mean(H), H_med = median(H), H_sd = sd(H),
-    Vol_mean = mean(vol), Vol_med = median(vol), Vol_sd = sd(vol)
-  )
+        group_by(Scientific_Name) %>%
+        summarize(
+        N = n(), 
+        DBH_mean = mean(DBH), DBH_med = median(DBH), 
+        DBH_sd = sd(DBH),
+        g_mean = mean(G), g_med = median(G), g_sd = sd(G),
+        H_mean = mean(H), H_med = median(H), H_sd = sd(H),
+        Vol_mean = mean(vol), Vol_med = median(vol), Vol_sd = sd(vol)
+        )
 
 head(FI_summ_sp, 14)
 
 ## Box plot and violin plot
 FI %>%
-  ggplot(aes(x = as.factor(UT), y = DBH)) +
-  geom_violin(aes(color = as.factor(UT), alpha = 0.8)) +
-  scale_color_brewer(palette = 'Paired') +
-  scale_fill_brewer(palette = 'Paired') +
-  #stat_summary(fun = mean, geom = 'point', shape = 23, size = 2) +
-  geom_boxplot(width = 0.3, outlier.size = -1) +
-  scale_y_continuous(breaks = seq(40, 300, by = 30)) +
-  #geom_text(data = IF_upa3_dap, aes(label = avg)) +
-  labs(
-    title = 'Distribution of DBH by Plot', 
-    x = 'Plot', y = 'DBH (cm)'
-  ) +
-  theme(
-    legend.position = 'none',
-    plot.title = element_text(hjust = 0.5)
-  ) 
+        ggplot(aes(x = as.factor(UT), y = DBH)) +
+        geom_violin(aes(color = as.factor(UT), alpha = 0.8)) +
+        scale_color_brewer(palette = 'Paired') +
+        scale_fill_brewer(palette = 'Paired') +
+        #stat_summary(fun = mean, geom = 'point', shape = 23, size = 2) +
+        geom_boxplot(width = 0.3, outlier.size = -1) +
+        scale_y_continuous(breaks = seq(40, 300, by = 30)) +
+        #geom_text(data = IF_upa3_dap, aes(label = avg)) +
+        labs(
+        title = 'Distribution of DBH by Plot', 
+        x = 'Plot', y = 'DBH (cm)'
+        ) +
+        theme(
+        legend.position = 'none',
+        plot.title = element_text(hjust = 0.5)
+        ) 
 
 FI %>%
-  ggplot(aes(x = as.factor(UT), y = H)) +
-  geom_violin(aes(color = as.factor(UT), alpha = 0.8)) +
-  scale_color_brewer(palette = 'Spectral') +
-  scale_fill_brewer(palette = 'Spectral') +
-  #stat_summary(fun = mean, geom = 'point', shape = 23, size = 2) +
-  geom_boxplot(width = 0.2, outlier.size = -1) +
-  #scale_y_continuous(breaks = seq(40, 350, by = 30)) +
-  #geom_text(data = IF_upa3_dap, aes(label = avg)) +
-  labs(
-    title = 'Distribution of Height by Plot', 
-    x = 'UT', y = 'Height (m)'
-  ) +
-  theme(
-    legend.position = 'none',
-    plot.title = element_text(hjust = 0.5)
-  )
+        ggplot(aes(x = as.factor(UT), y = H)) +
+        geom_violin(aes(color = as.factor(UT), alpha = 0.8)) +
+        scale_color_brewer(palette = 'Spectral') +
+        scale_fill_brewer(palette = 'Spectral') +
+        #stat_summary(fun = mean, geom = 'point', shape = 23, size = 2) +
+        geom_boxplot(width = 0.2, outlier.size = -1) +
+        #scale_y_continuous(breaks = seq(40, 350, by = 30)) +
+        #geom_text(data = IF_upa3_dap, aes(label = avg)) +
+        labs(
+            title = 'Distribution of Height by Plot', 
+            x = 'UT', y = 'Height (m)'
+        ) +
+        theme(
+            legend.position = 'none',
+            plot.title = element_text(hjust = 0.5)
+        )
 
 # Kernel density plot to view the distribution of DBH variable.
 #
@@ -136,26 +137,85 @@ FI %>%
 #              main = 'Diameter at Breast Height - FLONA Caxiuanã UMF 2 UPA 2')
 
 # Manually defined Windows (2.5, 4, e 6)
-plot(density(FI$DBH,
-             bw = 2.5,
-             na.rm = TRUE),
-     ylab = 'Density', 
-     xlab = 'DBH (cm)',
+plot(density(
+        FI$DBH, bw = 2.5, na.rm = TRUE), 
+     ylab = 'Density', xlab = 'DBH (cm)', 
      main = 'Kernel Density Estimates of Diameter at Breast Height \n in FLONA Caxiuanã UMF 2 UPA 2', 
-     col = 'red')
-lines(density(FI$DBH, 
-              bw = 4),
-      col = 'green')
-lines(density(FI$DBH,
-              bw = 6), 
-      col='blue')
+     col = 'red'
+)
+lines(density(FI$DBH, bw = 4), col = 'green')
+lines(density(FI$DBH, bw = 6), col='blue')
 legend(x = 250, y = 0.03, 
-       legend=c('BW:',
-                'red: 2.5',
-                'green: 4.0',
-                'blue: 6.0'))
+       legend = c('BW:', 'red: 2.5', 'green: 4.0', 'blue: 6.0'))
 
 #dev.off()
+
+###------------------------Horizontal Forest Structure-----------------------###
+FI_Horiz <- FI %>%
+	group_by(Scientific_Name) %>%
+	count(Scientific_Name, UT, name = 'N') %>%
+	spread(key = UT, value = N) %>%
+	
+	## Count the occurrence of each specie per UT (plot)
+	row_count(count = NA) %>%
+	mutate(n_UT = sum(abs(rowcount - length(unique(FI$UT))))) %>%
+	
+	## Set absolute density
+	mutate(DA = n_UT / sum(infra$AEM)) %>%
+	
+	## Set absolute frequency
+	mutate(FA = n_UT / 9) %>%
+	select(-c(2:11))
+
+n_sp <- FI %>% group_by(Scientific_Name) %>% summarise(n = n())
+
+FI_Horiz <- FI_Horiz %>%
+	left_join(n_sp, by = 'Scientific_Name') 
+
+## Set relative density
+FI_Horiz <- FI_Horiz %>%
+	select(n, n_UT, DA, FA) %>%
+	mutate(DR = DA / sum(FI_Horiz$DA) * 100) %>%
+	
+	## Set relative frequency
+	mutate(FR = FA / sum(FI_Horiz$FA) * 100)
+
+
+## Set basal area per specie
+g_upa <- FI %>%
+	group_by(Scientific_Name) %>%
+	summarise(Gsp = sum(G))
+
+FI_Horiz <- FI_Horiz %>%
+	left_join(g_upa, by = 'Scientific_Name')
+
+## Set total basal area
+FI_G <- FI %>%
+	select(Scientific_Name, G) %>%
+	summarize(SumG = sum(G)) 
+
+## Set Dominance (DO)
+FI_Horiz <- FI_Horiz %>%
+	mutate(DO = Gsp / sum(infra$AEM)) %>%
+	mutate(DOR = (DO / (FI_G$SumG / sum(infra$AEM)) * 100)) %>%
+	
+	## Set the Coverage Value (VC) 
+	mutate(VC = DR + DOR, VCR = VC /2) %>%
+	
+	## Set the Importance 'Value (VI)
+	mutate(VI = FR + DR + DOR)
+
+
+FI_Horiz <- FI_Horiz %>%
+	mutate(VIR = (VI / sum(FI_Horiz$VI)) * 100)
+
+head(FI_Horiz)
+
+write.csv2(
+        FI_Horiz,
+        'D:/Robson/home_office/Global-Level-Forest-Inventory/output/Hoz_Structure.csv',
+        row.names = FALSE
+)
 
 #-----------------Create Diameter at breast height Classes (DBH)---------------#
 class <- vector()   ## Sets the class center vector
@@ -231,10 +291,9 @@ write.csv2(
 #--------------Join the FI with the list of endangered species-----------------#
 FI_port <- FI %>%
         left_join(port, by = 'Scientific_Name') %>% ## endangered species
-        left_join(infra, by = 'UT') %>%             ## infrastructure
-        left_join(species_use[-c(1, 3, 4, 5, 6, 7)], by = 'Scientific_Name')
+        left_join(infra, by = 'UT')                 ## infrastructure
         
-
+        
 # NA values replaced by "Nao Protegida"
 FI_port$Status[which(is.na(FI_port$Status))] <- "Nao Protegida"
 
@@ -264,11 +323,20 @@ as_tibble(list_Species)
 ## Save the list of species
 write.csv2(list_Species,
            "D:/Robson/home_office/Global-Level-Forest-Inventory/output/listSpecies.csv",
-           row.names = TRUE)
+           row.names = TRUE
+)
 
 ###---------------------------Use of Species---------------------------------###
 species_use <- list_Species %>% 
   mutate(Use = (ifelse(Abate == 0, 'No Commercial', 'Commercial')))
+
+FI_port <- FI_port %>%
+        left_join(species_use[-c(1, 3, 4, 5, 6, 7)], by = 'Scientific_Name')
+
+write.csv2(FI_port,
+           "D:/Robson/home_office/Global-Level-Forest-Inventory/output/FI_complete.csv",
+           row.names = FALSE
+)
 
 #---------------------------List of species to be cut-------------------------##
 autex <- FI_port %>%
@@ -387,80 +455,39 @@ dest <- FI_filter %>%
         summarize(N = n()) %>%
         spread(key = Destination, value = N, fill = 0) %>%
         mutate(Total = Cut + Remaining)
-
-## Plot the selection of cut by DBH classes
-specie_plot <- dest %>%
-        group_by(Scientific_Name, class2, Cut, Remaining, Total) %>%
-  			filter(Scientific_Name %in% rem$Scientific_Name) %>%
-  			pivot_longer(
-    		        cols = c(3:5),
-    						values_to = 'N'
-  			) %>%
-			  ggplot(aes(x = class2, y = N, group = name)) +
-			  geom_bar(stat = 'identity', position = 'dodge', aes(fill = name)) +
-			  facet_wrap(~Scientific_Name, scales = 'free_y') +
-			  theme(
-                plot.title = element_text(color = "black", 
-                              size = 13, 
-                              face = "bold", 
-                              hjust = 0.5),
-						    plot.subtitle = element_text(color = "black", hjust = 0.5),
-						    axis.text.x = element_text(angle = 90, size = 9),
-						    axis.title.x = element_text(color = "black", size = 9),
-						    axis.title.y = element_text(color = "black", size = 12),
-						    plot.caption = element_text(color = "blue", face = "italic"),
-						    strip.text = element_text(face = 'italic'),
-						    legend.title = element_blank(),
-						    legend.position = 'top'
-						  ) +
-						  labs(
-    					        title = "Trees Selected for cutting in UPA 2 UMF 2 FLONA Caxiuanã", 
-									    x = 'DHB (cm)', 
-									    y = 'Number of Trees',
-									    caption = 'Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.'   
-							)
-
-specie_plot
-
 ## Filter all species which are without remaining trees by DBH classes
 rem <- dest %>%
         filter(Remaining == 0) %>%
         select(Scientific_Name)
 
 ## Plot the selection of cut by DBH classes
-specieRM_plot <- dest %>%
+specie_plot <- dest %>%
         group_by(Scientific_Name, class2, Cut, Remaining, Total) %>%
-        filter(Scientific_Name %in% rem$Scientific_Name) %>%
-        pivot_longer(
-                cols = c(3:5),
-                values_to = 'N'
-        ) %>%
-        ggplot(aes(x = class2, y = N, group = name)) +
-        geom_bar(stat = 'identity', position = 'dodge', aes(fill = name)) +
-        facet_wrap(~Scientific_Name, scales = 'free_y') +
-        theme(
-                plot.title = element_text(color = "black", 
-                                          size = 13, 
-                                          face = "bold", 
-                                          hjust = 0.5),
-                plot.subtitle = element_text(color = "black", hjust = 0.5),
-                axis.text.x = element_text(angle = 90, size = 9),
-                axis.title.x = element_text(color = "black", size = 9),
-                axis.title.y = element_text(color = "black", size = 12),
-                plot.caption = element_text(color = "blue", face = "italic"),
-                strip.text = element_text(face = 'italic'),
-                legend.title = element_blank(),
-                legend.position = 'top'
-          ) +
-          labs(
-            title = "Species Selected for cutting without Ramainingin Trees \nUPA 2 UMF 2 FLONA Caxiuanã", 
-            x = 'DHB (cm)', 
-            y = 'Number of Trees',
-            caption = 'Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.'   
-          )
-              
-specieRM_plot
-                  
+  	filter(Scientific_Name %in% rem$Scientific_Name) %>%
+  	pivot_longer(cols = c(3:5), values_to = 'N') %>%
+	ggplot(aes(x = class2, y = N, group = name)) +
+	geom_bar(stat = 'identity', position = 'dodge', aes(fill = name)) +
+	facet_wrap(~Scientific_Name, scales = 'free_y') +
+	theme(
+	        plot.title = element_text(color = "black", size = 13, 
+	                                  face = "bold", hjust = 0.5), 
+	        plot.subtitle = element_text(color = "black", hjust = 0.5), 
+	        axis.text.x = element_text(angle = 90, size = 9), 
+	        axis.title.x = element_text(color = "black", size = 9), 
+	        axis.title.y = element_text(color = "black", size = 12),
+	        plot.caption = element_text(color = "blue", face = "italic"), 
+	        strip.text = element_text(face = 'italic'), 
+	        legend.title = element_blank(), 
+	        legend.position = 'top'
+	) + 
+        labs(
+                title = "Trees Selected for cutting in UPA 2 UMF 2 FLONA Caxiuanã", 
+                x = 'DHB (cm)', y = 'Number of Trees', 
+                caption = 'Source: Florest Inventory POA 2020 Benevides Madeiras LTDA.'
+        )
+
+specie_plot
+
 #--------------------------Criterion 3 to 4 trees------------------------------#
 crit_3.4 <- FI_filter %>%
         select(UT, Scientific_Name, Destination, Status, AEM) %>%
