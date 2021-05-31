@@ -704,29 +704,87 @@ FI_port %>%
         ) 
 
 ## Map of plot
-map <- FI_filter %>%
-        filter(UT == 1) %>%
-        mutate(Status = str_replace(Status, "^Em Perigo", "Endangered")) %>%
-        mutate(Status = str_replace(Status, "^Nao Protegida", "Not Endangered")) %>%
-        mutate(Status = str_replace(Status, "^Vulneravel", "Vulnerable ")) %>%
-        ggplot() +
-        geom_point(
-                aes(x = East, y = North,
-                    color = Destination,
-                    text = paste('Scientific_Name:', '<i>', Scientific_Name, 
-                                 '</i>','<br>',
-                                 'Volume(m3):', vol, '<br>',
-                                 'Status:',Status))
-                ) +
-        theme(
-                plot.title = element_text(hjust = 0.5),
-                plot.caption = element_text(face = "italic", size = 7),
-                axis.title.y = element_text(angle = 90)
-                ) +
-        labs(
-                title = "Selection of Trees in plot 1.",
-                caption = "DATUM SIRGAS2000, MC-51, UTM Zone 22.") +
-        guides(y = guide_axis(angle = 90)) +
-        theme_bw()
+# map <- FI_filter %>%
+#         filter(UT == 1) %>%
+#         mutate(Status = str_replace(Status, "^Em Perigo", "Endangered")) %>%
+#         mutate(Status = str_replace(Status, "^Nao Protegida", "Not Endangered")) %>%
+#         mutate(Status = str_replace(Status, "^Vulneravel", "Vulnerable ")) %>%
+#         ggplot() +
+#         geom_point(
+#                 aes(x = East, y = North,
+#                     color = Destination,
+#                     text = paste('Scientific_Name:', '<i>', Scientific_Name, 
+#                                  '</i>','<br>',
+#                                  'Volume(m3):', vol, '<br>',
+#                                  'Status:',Status))
+#                 ) +
+#         theme(
+#                 plot.title = element_text(hjust = 0.5),
+#                 plot.caption = element_text(face = "italic", size = 7),
+#                 axis.title.y = element_text(angle = 90)
+#                 ) +
+#         labs(
+#                 title = "Selection of Trees in plot 1.",
+#                 caption = "DATUM SIRGAS2000, MC-51, UTM Zone 22.") +
+#         guides(y = guide_axis(angle = 90)) +
+#         theme_bw()
+# 
+# ggplotly(map)
 
-ggplotly(map)
+## Read inventory trees with geographical coordinates
+trees <- read.csv2(
+        'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/arvs_upa2_umf2_cxn.csv'
+)
+
+## Read permanent preservation areas shapefile
+app <- rgdal::readOGR(
+        'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/app.shp',
+        verbose = FALSE, use_iconv = TRUE, encoding = 'UTF-8'
+)
+
+## Read plots shapefile
+ut <- rgdal::readOGR(
+        'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/ut_upa2_umf2_cxn.shp',
+        verbose = FALSE, use_iconv = TRUE, encoding = 'UTF-8'
+)
+
+# pal <- colorFactor(
+#         palette = c('red', 'green'),
+#         domain = trees$Destination
+# )
+
+## Set the map of tress, plots and permanent preserved areas.
+map <- leaflet(trees) %>%
+        addTiles() %>%
+        #addProviderTiles("Stamen.Terrain") %>%
+        fitBounds(
+                lat1 = -1.73007302, lng1 = -51.77978728,
+                lat2 = -1.76975667, lng2 = -51.81636691
+        ) %>%
+        addPolygons(
+                data = ut, stroke = TRUE,
+                color = 'black', fillColor = 'transparent'
+        ) %>%
+        addPolygons(
+                data = app, color = 'green', fillColor = 'green',
+                label = ~paste0(formatC(hectare, digits = 4), ' ha')
+        ) %>%
+        addCircles(
+                data = trees,
+                color = ~pal(Destination),
+                radius = 2, weight = 4,
+                popup = ~paste0(
+                        sep = ' ',
+                        '<b>Plot: </b>', UT,'<br>',
+                        '<b>Nº ', N, '<br>',
+                        '<b>Scientific_name: </b>', 
+                        '<i>',Scientific_Name,'</i>', '<br>',
+                        '<b>DBH: </b>', formatC(DBH, digits = 3), ' cm', '<br>',
+                        '<b>Height: ', H, ' m', '<br>',
+                        '<b>Vol: </b>', formatC(vol, digits = 4), ' m³', '<br>',
+                        '<b>Destination: ', Destination
+                )
+        ) %>%
+        addMiniMap()
+
+map
