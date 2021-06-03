@@ -736,41 +736,73 @@ trees <- read.csv2(
         'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/arvs_upa2_umf2_cxn.csv'
 )
 
-## Read permanent preservation areas shapefile
+cut <- trees %>%
+        filter(Destination == 'Cut')
+
+rem <- trees %>%
+        filter(Destination == 'Remaining')
+
 app <- rgdal::readOGR(
         'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/app.shp',
         verbose = FALSE, use_iconv = TRUE, encoding = 'UTF-8'
 )
 
-## Read plots shapefile
 ut <- rgdal::readOGR(
         'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/ut_upa2_umf2_cxn.shp',
         verbose = FALSE, use_iconv = TRUE, encoding = 'UTF-8'
 )
 
-# pal <- colorFactor(
-#         palette = c('red', 'green'),
-#         domain = trees$Destination
-# )
+pal <- colorFactor(
+        palette = c('red', 'green'),
+        domain = trees$Destination
+)
 
-## Set the map of tress, plots and permanent preserved areas.
 map <- leaflet(trees) %>%
-        addTiles() %>%
-        #addProviderTiles("Stamen.Terrain") %>%
+        addTiles(group = 'OSM') %>%
+        #setView(lat = -1.75404558, lng = -51.79793383, zoom = 10) %>%
+        addProviderTiles('OpenTopoMap', group = 'Topo') %>%
+        addProviderTiles('Esri.WorldImagery', group = 'Satellite') %>%
         fitBounds(
                 lat1 = -1.73007302, lng1 = -51.77978728,
                 lat2 = -1.76975667, lng2 = -51.81636691
         ) %>%
+        # Load the plot polygons
         addPolygons(
-                data = ut, stroke = TRUE,
+                data = ut, stroke = TRUE, group = 'Plot',
                 color = 'black', fillColor = 'transparent'
         ) %>%
+        
+        # Load river influence area 
         addPolygons(
-                data = app, color = 'green', fillColor = 'green',
+                data = app, stroke = TRUE, color = 'green', group = 'River Area',
+                fillColor = 'green',
                 label = ~paste0(formatC(hectare, digits = 4), ' ha')
         ) %>%
+        # Load de localization of the trees to cut down
         addCircles(
-                data = trees,
+                data = cut, group = 'Harvest',
+                color = ~pal(Destination),
+                radius = 2, weight = 4,
+                popup = ~paste0(
+                        sep = ' ',
+                        '<b>Plot: </b>', UT,'<br>',
+                        '<b>N? ', N, '<br>',
+                        '<b>Scientific_name: </b>', 
+                        '<i>',Scientific_Name,'</i>', 
+                        '<br>', '<b>DBH: </b>', formatC(
+                                DBH, digits = 3),
+                        ' cm', '<br>',
+                        '<b>Height: ', H, ' m', '<br>',
+                        '<b>Vol: </b>', formatC(
+                                vol, digits = 4),
+                        ' m?', '<br>',
+                        '<b>Destination: ', Destination
+                )
+        ) %>%
+        # Load de localization of the trees that 
+        # will not be cut down
+        addCircles(
+                data = rem, group = 'Remaining',
                 color = ~pal(Destination),
                 radius = 2, weight = 4,
                 popup = ~paste0(
@@ -778,13 +810,32 @@ map <- leaflet(trees) %>%
                         '<b>Plot: </b>', UT,'<br>',
                         '<b>Nº ', N, '<br>',
                         '<b>Scientific_name: </b>', 
-                        '<i>',Scientific_Name,'</i>', '<br>',
-                        '<b>DBH: </b>', formatC(DBH, digits = 3), ' cm', '<br>',
+                        '<i>',Scientific_Name,'</i>', 
+                        '<br>', '<b>DBH: </b>', formatC(
+                                DBH, digits = 3),
+                        ' cm', '<br>',
                         '<b>Height: ', H, ' m', '<br>',
-                        '<b>Vol: </b>', formatC(vol, digits = 4), ' m³', '<br>',
+                        '<b>Vol: </b>', formatC(
+                                vol, digits = 4),
+                        ' m³', '<br>',
                         '<b>Destination: ', Destination
                 )
         ) %>%
-        addMiniMap()
+        
+        # Set a map localization
+        addMiniMap() %>%
+        # Set legend of the trees
+        addLegend("bottomright", pal = pal, values = ~Destination,
+                  title = 'Trees',
+                  #labFormat = labelFormat(prefix = ""),
+                  opacity = 1
+        ) %>%
+        
+        # Set map providers and allow the user to select them
+        addLayersControl(
+                baseGroups = c('OSM (default)', 'Topo',
+                               'Satellite'), 
+                overlayGroups = c('Harvest', 'Remaining', 
+                                  'Plot', 'River Area'))
 
 map
