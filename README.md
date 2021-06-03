@@ -60,3 +60,8 @@
 <p align="center" width="100%">
   <img src="https://github.com/rcflorestal/Global-Level-Forest-Inventory/blob/main/output/Crit-10.15.png">
 </p>
+
+<!--Map of the trees-->
+<p align="center" width="100%">
+  <img src="https://github.com/rcflorestal/Data-Science-Specialization/raw/main/Data-Products/Peer-graded_Assignment3/map.png">
+</p>
