@@ -786,7 +786,7 @@ map <- leaflet(trees) %>%
                 popup = ~paste0(
                         sep = ' ',
                         '<b>Plot: </b>', UT,'<br>',
-                        '<b>N? ', N, '<br>',
+                        '<b>Nº ', N, '<br>',
                         '<b>Scientific_name: </b>', 
                         '<i>',Scientific_Name,'</i>', 
                         '<br>', '<b>DBH: </b>', formatC(
@@ -795,7 +795,7 @@ map <- leaflet(trees) %>%
                         '<b>Height: ', H, ' m', '<br>',
                         '<b>Vol: </b>', formatC(
                                 vol, digits = 4),
-                        ' m?', '<br>',
+                        ' m³', '<br>',
                         '<b>Destination: ', Destination
                 )
         ) %>%
@@ -836,6 +836,7 @@ map <- leaflet(trees) %>%
                 baseGroups = c('OSM (default)', 'Topo',
                                'Satellite'), 
                 overlayGroups = c('Harvest', 'Remaining', 
-                                  'Plot', 'River Area'))
+                                  'Plot', 'River Area'),
+                options = layersControlOptions(collapsed = FALSE))
 
 map
