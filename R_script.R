@@ -29,6 +29,7 @@ library(jpeg)
 library(lattice)
 library(plotly)
 library(sjmisc)
+library(leaflet)
 
 #---------------------------Read data Sets-------------------------------------#
 # Read The List of Endangered Species, according to the Ordinance of the       #
@@ -44,9 +45,8 @@ port <- read.csv2(
 as_tibble(port)
 
 # Read the forest inventory sheet
-FI <- read.table(
-        'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/IFpoa2.csv', 
-        header = TRUE, dec = ","
+FI <- read.csv2(
+        'D:/Robson/home_office/Global-Level-Forest-Inventory/Data/IFpoa2.csv'
 )
 
 # Show variables of forest inventory
@@ -587,8 +587,8 @@ crit_10.15 <- FI_filter %>%
                PercRem = round(Remaining / Total * 100),
                Crit = if_else(Status == "Nao Protegida", (10), (15)),
                Analysis = if_else(PercRem >= Crit | Cut == 0,
-                            "Atende", 
-                            "Nao Atende")) %>%
+                            "Ok", 
+                            "Not")) %>%
         distinct(Scientific_Name, .keep_all = TRUE) %>%
         select(-c(AEM,Destination)) %>%
         filter(Cut != 0)
@@ -603,23 +603,25 @@ write.csv2(crit_10.15,
 ## Table 10 - 15 %
 datatable(head(crit_10.15), class = 'cell-border stripe')
 
-## Plot 10 - 15%
-ggplot(
-        crit_10.15, aes(
-                x = PercRem,
-                xend = Crit,
-                y = Scientific_Name,
-                group = Scientific_Name)
-        ) +
-        geom_dumbbell(color = "#a3c4dc", size = 0.85) + 
-        scale_x_continuous(breaks =  seq(0,100,5)) +
+## Chart 10 - 15%
+## Lollipop Chart 3
+crit_10.15 %>%
+        filter(PercRem < 100) %>%
+        ggplot(aes(x = PercRem, y = Scientific_Name, color = Analysis)) +
+        geom_point(size = 3) +
+        geom_segment(aes(x = Crit, xend = PercRem,
+                         y = Scientific_Name, 
+                         yend = Scientific_Name), color = 'steelblue') +
+        geom_text(color = 'purple', size = 3, hjust = -0.25,
+                  aes(label = paste0(PercRem, '%'))) +
+        scale_x_continuous(breaks =  seq(10, 100, 5)) +
         labs(
-                x = 'Percentage of Remaining Trees', 
+                x = '', 
                 y = NULL, 
-                title = "PERCENTAGE OF REMAIING TREES IN UPA 2 UMF 2", 
-                subtitle = "POA 2020 - Haverst 2020-2021 - UMF 2 FLONA Caxiuanã", 
-                caption = "Source: Florest Inventory of POA 2020 Benevides Madeiras LTDA."
-                ) +
+                title = 'Percentage of Raiminig Trees',
+                subtitle = 'POA 2020 - Haverst 2020-2021 - UMF 2 FLONA Caxiuanã',
+                caption = 'Source: Florest Inventory of POA 2020 Benevides Madeiras LTDA.'
+        ) +
         theme(
                 plot.title = element_text(
                         size = 13, hjust = 0.5, face = "bold"),
@@ -628,12 +630,13 @@ ggplot(
                 plot.background = element_rect(fill = "#f7f7f7"), 
                 panel.background = element_rect(fill = "#D8D8D8"), #f7f7f7
                 panel.grid.minor = element_blank(),
-                panel.grid.major.y = element_blank(),
+                #panel.grid.major.y = element_blank(),
                 panel.grid.major.x = element_line(),
-                axis.ticks = element_blank(),
+                axis.ticks.x = element_blank(),
+                axis.text.x = element_blank(),
                 legend.position = "top",
                 panel.border = element_blank()
-                )
+        )
 
 ## Plot vol ~ UT and Status
 FI_port %>% 
