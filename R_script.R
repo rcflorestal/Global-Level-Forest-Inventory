@@ -226,15 +226,15 @@ class <- vector()   ## Sets the class center vector
 class2 <- vector()  ## Sets the class range vector
 
 # Define the limits of DBH
-classMin <- 40  # Sets Minimum diameter
-classMax <- 300 # Sets Maximum diameter
-classAmp <- 10  # Sets Class width
+classMin <- round(min(FI$DBH), 0)  # Sets Minimum diameter
+classMax <- 900                    # Sets Maximum diameter
+classAmp <- 10                     # Sets Class width
 nClasses <- (classMax - classMin) / classAmp # Number of diameter classes
 
 # Looping to DBH
 d <- classMin 
 
-for(j in 1:nClasses){
+for(i in 1:nClasses){
         d = d + classAmp   ## Upper Class Limits
         li = d - classAmp  ## Lower Class Limits
         sup = d
@@ -249,7 +249,7 @@ class2[which(as.numeric(class) > maxClass)] = paste(">", maxClass, sep = "")
 class[which(as.numeric(class) > maxClass)] = paste(">", maxClass, sep = "")
 
 # Remove the object j created on looping  
-rm(j)
+rm(i)
 
 # Convert vectors to factors
 FI$class = as.factor(class)
